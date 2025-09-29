@@ -9,6 +9,7 @@ const Home = () => {
   const [checkInCode, setCheckInCode] = useState("");
   const [checkInSuccess, setCheckInSuccess] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
+  const [isMailOpen, setIsMailOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleCheckIn = () => {
@@ -56,7 +57,10 @@ const Home = () => {
           <p className="text-gray-600 mt-2">Next: Cyber Threat Intelligence (12:00)</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition">
+        <div
+          onClick={() => setIsMailOpen(true)}
+          className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+        >
           <h2 className="text-lg font-bold text-purple-700">Mail</h2>
           <p className="text-gray-600 mt-2">No new messages</p>
         </div>
@@ -137,6 +141,28 @@ const Home = () => {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {isMailOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-xl p-6 shadow-lg w-96 relative">
+            <button
+              onClick={() => setIsMailOpen(false)}
+              className="absolute top-2 right-2 px-2 py-1 bg-gray-300 rounded hover:bg-gray-400"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-bold text-purple-700 mb-4">Latest Mail</h3>
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <p className="font-semibold text-gray-800">Subject: Assignment Reminder</p>
+              <p className="text-gray-600 mt-2">
+                Your Human-Computer Interaction coursework is due next Friday. Please submit
+                via Canvas before 5pm.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">From: lecturer@wlv.ac.uk</p>
+            </div>
           </div>
         </div>
       )}
