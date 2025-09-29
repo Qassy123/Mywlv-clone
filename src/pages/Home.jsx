@@ -10,6 +10,7 @@ const Home = () => {
   const [checkInSuccess, setCheckInSuccess] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isMailOpen, setIsMailOpen] = useState(false);
+  const [mailRead, setMailRead] = useState(false); // NEW STATE
   const navigate = useNavigate();
 
   const handleCheckIn = () => {
@@ -20,6 +21,11 @@ const Home = () => {
     }
     setIsCheckInOpen(false);
     setCheckInCode("");
+  };
+
+  const openMail = () => {
+    setIsMailOpen(true);
+    setMailRead(true); // mark as read when opened
   };
 
   return (
@@ -58,13 +64,19 @@ const Home = () => {
         </div>
 
         <div
-          onClick={() => setIsMailOpen(true)}
+          onClick={openMail}
           className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Mail</h2>
-          <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
-            Urgent • Unread
-          </p>
+          {!mailRead ? (
+            <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
+              Urgent • Unread
+            </p>
+          ) : (
+            <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded">
+              All up to date
+            </p>
+          )}
         </div>
 
         <div
