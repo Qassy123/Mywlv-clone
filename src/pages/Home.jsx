@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import { TIMETABLE_MODULES } from "./Timetable";
+import { TIMETABLE_EVENTS, TIMETABLE_MODULES } from "../data/timetable.js";
+
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 const Home = () => {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
@@ -10,7 +12,6 @@ const Home = () => {
   const [checkInSuccess, setCheckInSuccess] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isMailOpen, setIsMailOpen] = useState(false);
-  const [mailRead, setMailRead] = useState(false); // NEW STATE
   const navigate = useNavigate();
 
   const handleCheckIn = () => {
@@ -23,10 +24,36 @@ const Home = () => {
     setCheckInCode("");
   };
 
-  const openMail = () => {
-    setIsMailOpen(true);
-    setMailRead(true); // mark as read when opened
+  // --- timetable tile logic ---
+  const now = new Date();
+  const todayName = now.toLocaleDateString("en-GB", { weekday: "long" });
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  const toMins = (hhmm) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + m;
   };
+
+  const enriched = TIMETABLE_EVENTS.map((e) => {
+    const [start, end] = e.time.split(" - ");
+    return { ...e, startMins: toMins(start), endMins: toMins(end), dayIdx: DAYS.indexOf(e.day) };
+  });
+
+  const todayClasses = enriched.filter(e => e.day === todayName);
+  const inProgress = todayClasses.find(e => nowMins >= e.startMins && nowMins <= e.endMins);
+
+  let tileText = "No upcoming classes";
+  if (inProgress) {
+    tileText = `Now: ${inProgress.module} (${inProgress.time})`;
+  } else {
+    const upcomingToday = todayClasses.find(e => e.startMins > nowMins);
+    if (upcomingToday) {
+      tileText = `Next: ${upcomingToday.module} (${upcomingToday.time})`;
+    } else {
+      const later = enriched.find(e => e.dayIdx > DAYS.indexOf(todayName));
+      if (later) tileText = `Next: ${later.module} (${later.time})`;
+    }
+  }
 
   return (
     <div className="p-4 space-y-6">
@@ -60,23 +87,17 @@ const Home = () => {
           className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Timetable</h2>
-          <p className="text-gray-600 mt-2">Next: Cyber Threat Intelligence (12:00)</p>
+          <p className="text-gray-600 mt-2">{tileText}</p>
         </div>
 
         <div
-          onClick={openMail}
+          onClick={() => setIsMailOpen(true)}
           className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Mail</h2>
-          {!mailRead ? (
-            <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
-              Urgent • Unread
-            </p>
-          ) : (
-            <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded">
-              All up to date
-            </p>
-          )}
+          <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
+            Urgent • Unread
+          </p>
         </div>
 
         <div
