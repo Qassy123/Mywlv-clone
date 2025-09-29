@@ -1,9 +1,10 @@
-import { useState } from "react";   // ✅ Added
+import { useState } from "react";   // ✅ Already added
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from "react-router-dom"; // ✅ useNavigate added
 import Home from "./pages/Home.jsx";
 import Timetable from "./pages/Timetable.jsx";
 import Calendar from "./pages/Calendar.jsx";
 import Grades from "./pages/Grades.jsx";
+import Login from "./pages/Login.jsx"; // ✅ New Login page
 import { TIMETABLE_MODULES } from "./data/timetable.js"; // ✅ Import modules for course-based search
 
 function AppContent() {
@@ -11,6 +12,18 @@ function AppContent() {
   const [searchQuery, setSearchQuery] = useState(""); // ✅ Global search state
   const [searchError, setSearchError] = useState(""); // ✅ Error message state
   const navigate = useNavigate(); // ✅ Needed for search navigation
+
+  // ✅ Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    localStorage.getItem("isAuthenticated") === "true"
+  );
+
+  const handleSignOut = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login");
+    setMenuOpen(false);
+  };
 
   // ✅ Search handler with prefixes + error message + 4-char minimum
   const handleSearch = (e) => {
@@ -101,18 +114,20 @@ function AppContent() {
           </div>
 
           {/* Search Bar (Desktop only) */}
-          <div className="hidden md:block">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={handleSearch}   // ✅ navigation search
-              className="px-3 py-2 rounded-lg text-black w-64 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            {searchError && (
-              <p className="text-red-500 text-sm mt-1">{searchError}</p>
-            )}
-          </div>
+          {isAuthenticated && (
+            <div className="hidden md:block">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={handleSearch}   // ✅ navigation search
+                className="px-3 py-2 rounded-lg text-black w-64 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              {searchError && (
+                <p className="text-red-500 text-sm mt-1">{searchError}</p>
+              )}
+            </div>
+          )}
 
           {/* Burger Menu Button (Mobile) */}
           <button
@@ -139,76 +154,11 @@ function AppContent() {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-gray-100 border-b">
-        <div className="mx-auto max-w-6xl flex flex-col md:flex-row gap-2 md:gap-4 p-4">
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex gap-2">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${
-                  isActive
-                    ? "bg-purple-900 text-white"
-                    : "bg-purple-700 text-white hover:bg-purple-800"
-                }`
-              }
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/timetable"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${
-                  isActive
-                    ? "bg-purple-900 text-white"
-                    : "bg-purple-700 text-white hover:bg-purple-800"
-                }`
-              }
-            >
-              Timetable
-            </NavLink>
-            <NavLink
-              to="/calendar"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${
-                  isActive
-                    ? "bg-purple-900 text-white"
-                    : "bg-purple-700 text-white hover:bg-purple-800"
-                }`
-              }
-            >
-              Calendar
-            </NavLink>
-            <NavLink
-              to="/grades"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${
-                  isActive
-                    ? "bg-purple-900 text-white"
-                    : "bg-purple-700 text-white hover:bg-purple-800"
-                }`
-              }
-            >
-              Grades
-            </NavLink>
-          </div>
-
-          {/* Mobile Burger Menu Dropdown */}
-          {menuOpen && (
-            <div className="flex flex-col gap-2 md:hidden">
-              {/* ✅ Added search inside mobile menu */}
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={handleSearch}   // ✅ navigation search
-                className="px-3 py-2 rounded-lg text-black mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              {searchError && (
-                <p className="text-red-500 text-sm">{searchError}</p>
-              )}
-
+      {isAuthenticated && (
+        <nav className="bg-gray-100 border-b">
+          <div className="mx-auto max-w-6xl flex flex-col md:flex-row gap-2 md:gap-4 p-4">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex gap-2">
               <NavLink
                 to="/"
                 end
@@ -219,7 +169,6 @@ function AppContent() {
                       : "bg-purple-700 text-white hover:bg-purple-800"
                   }`
                 }
-                onClick={() => setMenuOpen(false)}
               >
                 Home
               </NavLink>
@@ -232,7 +181,6 @@ function AppContent() {
                       : "bg-purple-700 text-white hover:bg-purple-800"
                   }`
                 }
-                onClick={() => setMenuOpen(false)}
               >
                 Timetable
               </NavLink>
@@ -245,7 +193,6 @@ function AppContent() {
                       : "bg-purple-700 text-white hover:bg-purple-800"
                   }`
                 }
-                onClick={() => setMenuOpen(false)}
               >
                 Calendar
               </NavLink>
@@ -258,34 +205,130 @@ function AppContent() {
                       : "bg-purple-700 text-white hover:bg-purple-800"
                   }`
                 }
-                onClick={() => setMenuOpen(false)}
               >
                 Grades
               </NavLink>
+
+              {/* ✅ Desktop Sign Out button */}
+              {isAuthenticated && (
+                <button
+                  onClick={handleSignOut}
+                  className="px-3 py-2 rounded text-center bg-red-600 text-white hover:bg-red-700"
+                >
+                  Sign Out
+                </button>
+              )}
             </div>
-          )}
-        </div>
-      </nav>
+
+            {/* Mobile Burger Menu Dropdown */}
+            {menuOpen && (
+              <div className="flex flex-col gap-2 md:hidden">
+                {/* ✅ Added search inside mobile menu */}
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearch}   // ✅ navigation search
+                  className="px-3 py-2 rounded-lg text-black mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                {searchError && (
+                  <p className="text-red-500 text-sm">{searchError}</p>
+                )}
+
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded text-center ${
+                      isActive
+                        ? "bg-purple-900 text-white"
+                        : "bg-purple-700 text-white hover:bg-purple-800"
+                    }`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Home
+                </NavLink>
+                <NavLink
+                  to="/timetable"
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded text-center ${
+                      isActive
+                        ? "bg-purple-900 text-white"
+                        : "bg-purple-700 text-white hover:bg-purple-800"
+                    }`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Timetable
+                </NavLink>
+                <NavLink
+                  to="/calendar"
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded text-center ${
+                      isActive
+                        ? "bg-purple-900 text-white"
+                        : "bg-purple-700 text-white hover:bg-purple-800"
+                    }`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Calendar
+                </NavLink>
+                <NavLink
+                  to="/grades"
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded text-center ${
+                      isActive
+                        ? "bg-purple-900 text-white"
+                        : "bg-purple-700 text-white hover:bg-purple-800"
+                    }`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Grades
+                </NavLink>
+
+                {/* ✅ Sign Out button in burger menu */}
+                <button
+                  onClick={handleSignOut}
+                  className="px-3 py-2 rounded text-left text-red-600 hover:bg-gray-200"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        </nav>
+      )}
 
       {/* Page Content */}
       <main className="mx-auto max-w-6xl p-6">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/timetable" element={<Timetable />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/grades" element={<Grades />} />
+          {!isAuthenticated ? (
+            <Route path="*" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+          ) : (
+            <>
+              <Route path="/" element={<Home />} />
+              <Route path="/timetable" element={<Timetable />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/grades" element={<Grades />} />
+            </>
+          )}
         </Routes>
 
         {/* Tailwind Test Card */}
-        <div className="mt-8 max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg">
-          <h2 className="mb-2 text-2xl font-bold tracking-tight text-purple-700">
-            Tailwind Test Card
-          </h2>
-          <p className="font-normal text-gray-700">
-            If you see a white card with a purple title and hover shadow,
-            Tailwind is working perfectly ✅
-          </p>
-        </div>
+        {isAuthenticated && (
+          <div className="mt-8 max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg">
+            <h2 className="mb-2 text-2xl font-bold tracking-tight text-purple-700">
+              Tailwind Test Card
+            </h2>
+            <p className="font-normal text-gray-700">
+              If you see a white card with a purple title and hover shadow,
+              Tailwind is working perfectly ✅
+            </p>
+          </div>
+        )}
       </main>
     </>
   );
