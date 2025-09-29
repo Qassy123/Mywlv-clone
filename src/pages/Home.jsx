@@ -62,7 +62,9 @@ const Home = () => {
           className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Mail</h2>
-          <p className="text-gray-600 mt-2">No new messages</p>
+          <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
+            Urgent • Unread
+          </p>
         </div>
 
         <div
