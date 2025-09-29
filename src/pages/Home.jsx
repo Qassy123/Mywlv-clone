@@ -1,17 +1,41 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
+import "swiper/css/pagination";
 import { TIMETABLE_EVENTS, TIMETABLE_MODULES } from "../data/timetable.js";
 
-const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+// ✅ banner images
+import banner1 from "../assets/banner1.jpg";
+import banner2 from "../assets/banner2.jpg";
+import banner3 from "../assets/banner3.jpg";
+import banner4 from "../assets/banner4.jpg";
 
-const Home = () => {
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// ✅ Highlight helper
+function applyHighlight(text, query) {
+  if (!query || query.length < 4) return text; // only highlight if 4+ chars
+  const regex = new RegExp(`(${query})`, "gi");
+  return text.split(regex).map((part, i) =>
+    regex.test(part) ? (
+      <mark key={i} className="bg-yellow-300">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+}
+
+const Home = ({ highlight }) => {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [checkInCode, setCheckInCode] = useState("");
   const [checkInSuccess, setCheckInSuccess] = useState(false);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isMailOpen, setIsMailOpen] = useState(false);
+  const [mailRead, setMailRead] = useState(false);
   const navigate = useNavigate();
 
   const handleCheckIn = () => {
@@ -39,48 +63,57 @@ const Home = () => {
     return { ...e, startMins: toMins(start), endMins: toMins(end), dayIdx: DAYS.indexOf(e.day) };
   });
 
-  const todayClasses = enriched.filter(e => e.day === todayName);
-  const inProgress = todayClasses.find(e => nowMins >= e.startMins && nowMins <= e.endMins);
+  const todayClasses = enriched.filter((e) => e.day === todayName);
+  const inProgress = todayClasses.find((e) => nowMins >= e.startMins && nowMins <= e.endMins);
 
   let tileText = "No upcoming classes";
   if (inProgress) {
     tileText = `Now: ${inProgress.module} (${inProgress.time})`;
   } else {
-    const upcomingToday = todayClasses.find(e => e.startMins > nowMins);
+    const upcomingToday = todayClasses.find((e) => e.startMins > nowMins);
     if (upcomingToday) {
       tileText = `Next: ${upcomingToday.module} (${upcomingToday.time})`;
     } else {
-      const later = enriched.find(e => e.dayIdx > DAYS.indexOf(todayName));
+      const later = enriched.find((e) => e.dayIdx > DAYS.indexOf(todayName));
       if (later) tileText = `Next: ${later.module} (${later.time})`;
     }
   }
 
   return (
     <div className="p-4 space-y-6">
-      <Swiper spaceBetween={20} slidesPerView={1} className="rounded-2xl shadow-md">
+      {/* ✅ Swiper with aspect ratio for consistent banners */}
+      <Swiper
+        modules={[Autoplay, Pagination]}
+        autoplay={{ delay: 5000, disableOnInteraction: false }}
+        pagination={{ clickable: true }}
+        loop={true}
+        spaceBetween={20}
+        slidesPerView={1}
+        className="rounded-2xl shadow-md w-full"
+      >
         <SwiperSlide>
-          <img
-            src="https://via.placeholder.com/800x200?text=Welcome+Back+Students"
-            alt="Banner 1"
-            className="w-full rounded-2xl"
-          />
+          <div className="aspect-[16/9] w-full">
+            <img src={banner1} alt="Banner 1" className="w-full h-full object-cover rounded-2xl" />
+          </div>
         </SwiperSlide>
         <SwiperSlide>
-          <img
-            src="https://via.placeholder.com/800x200?text=Upcoming+Events"
-            alt="Banner 2"
-            className="w-full rounded-2xl"
-          />
+          <div className="aspect-[16/9] w-full">
+            <img src={banner2} alt="Banner 2" className="w-full h-full object-cover rounded-2xl" />
+          </div>
         </SwiperSlide>
         <SwiperSlide>
-          <img
-            src="https://via.placeholder.com/800x200?text=Check+Your+Grades"
-            alt="Banner 3"
-            className="w-full rounded-2xl"
-          />
+          <div className="aspect-[16/9] w-full">
+            <img src={banner3} alt="Banner 3" className="w-full h-full object-cover rounded-2xl" />
+          </div>
+        </SwiperSlide>
+        <SwiperSlide>
+          <div className="aspect-[16/9] w-full">
+            <img src={banner4} alt="Banner 4" className="w-full h-full object-cover rounded-2xl" />
+          </div>
         </SwiperSlide>
       </Swiper>
 
+      {/* --- tiles --- */}
       <div className="grid grid-cols-2 gap-4">
         <div
           onClick={() => navigate("/timetable")}
@@ -91,13 +124,22 @@ const Home = () => {
         </div>
 
         <div
-          onClick={() => setIsMailOpen(true)}
+          onClick={() => {
+            setIsMailOpen(true);
+            setMailRead(true);
+          }}
           className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Mail</h2>
-          <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
-            Urgent • Unread
-          </p>
+          {!mailRead ? (
+            <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
+              Urgent • Unread
+            </p>
+          ) : (
+            <p className="mt-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded">
+              All up to date
+            </p>
+          )}
         </div>
 
         <div
@@ -123,17 +165,18 @@ const Home = () => {
       <div className="bg-white rounded-2xl p-4 shadow-md">
         <h2 className="text-lg font-bold text-purple-700">Newsroom</h2>
         <p className="text-gray-700 mt-1">
-          WLV Student Newsletter: Welcome to semester 1 2025/26. Stay updated with
-          the latest news and events from the University.
+          {applyHighlight(
+            "WLV Student Newsletter: Welcome to semester 1 2025/26. Stay updated with the latest news and events from the University.",
+            highlight
+          )}
         </p>
       </div>
 
+      {/* --- modals --- */}
       {isCheckInOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-xl p-6 shadow-lg w-80">
-            <h3 className="text-lg font-bold text-purple-700 mb-3">
-              Enter Lecture Code
-            </h3>
+            <h3 className="text-lg font-bold text-purple-700 mb-3">Enter Lecture Code</h3>
             <input
               type="text"
               placeholder="Enter code..."
@@ -172,7 +215,7 @@ const Home = () => {
             <ul className="space-y-2 max-h-64 overflow-y-auto">
               {TIMETABLE_MODULES.map((course, index) => (
                 <li key={index} className="p-2 border-b border-gray-200 text-gray-700">
-                  {course}
+                  {applyHighlight(course, highlight)}
                 </li>
               ))}
             </ul>
@@ -191,12 +234,18 @@ const Home = () => {
             </button>
             <h3 className="text-lg font-bold text-purple-700 mb-4">Latest Mail</h3>
             <div className="border rounded-lg p-4 bg-gray-50">
-              <p className="font-semibold text-gray-800">Subject: Assignment Reminder</p>
-              <p className="text-gray-600 mt-2">
-                Your Human-Computer Interaction coursework is due next Friday. Please submit
-                via Canvas before 5pm.
+              <p className="font-semibold text-gray-800">
+                {applyHighlight("Subject: Assignment Reminder", highlight)}
               </p>
-              <p className="text-sm text-gray-500 mt-2">From: lecturer@wlv.ac.uk</p>
+              <p className="text-gray-600 mt-2">
+                {applyHighlight(
+                  "Your Human-Computer Interaction coursework is due next Friday. Please submit via Canvas before 5pm.",
+                  highlight
+                )}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                {applyHighlight("From: lecturer@wlv.ac.uk", highlight)}
+              </p>
             </div>
           </div>
         </div>
