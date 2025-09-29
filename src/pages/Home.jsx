@@ -2,14 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import { TIMETABLE_MODULES } from "./Timetable";
 
 const Home = () => {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [checkInCode, setCheckInCode] = useState("");
   const [checkInSuccess, setCheckInSuccess] = useState(false);
+  const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Example: pretend "1234" is today’s lecture code
   const handleCheckIn = () => {
     if (checkInCode === "1234") {
       setCheckInSuccess(true);
@@ -21,44 +22,79 @@ const Home = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-
-      {/* 🔹 Image Carousel */}
+    <div className="p-4 space-y-6">
       <Swiper spaceBetween={20} slidesPerView={1} className="rounded-2xl shadow-md">
         <SwiperSlide>
-          <img src="https://via.placeholder.com/800x200?text=Welcome+Back+Students" alt="Banner 1" className="w-full rounded-2xl"/>
+          <img
+            src="https://via.placeholder.com/800x200?text=Welcome+Back+Students"
+            alt="Banner 1"
+            className="w-full rounded-2xl"
+          />
         </SwiperSlide>
         <SwiperSlide>
-          <img src="https://via.placeholder.com/800x200?text=Upcoming+Events" alt="Banner 2" className="w-full rounded-2xl"/>
+          <img
+            src="https://via.placeholder.com/800x200?text=Upcoming+Events"
+            alt="Banner 2"
+            className="w-full rounded-2xl"
+          />
         </SwiperSlide>
         <SwiperSlide>
-          <img src="https://via.placeholder.com/800x200?text=Check+Your+Grades" alt="Banner 3" className="w-full rounded-2xl"/>
+          <img
+            src="https://via.placeholder.com/800x200?text=Check+Your+Grades"
+            alt="Banner 3"
+            className="w-full rounded-2xl"
+          />
         </SwiperSlide>
       </Swiper>
 
-      {/* 🔹 Student Check-In */}
-      <div className="bg-purple-100 rounded-2xl p-4 shadow-md">
-        <h2 className="text-xl font-bold text-purple-700">Student Check-In</h2>
-        <p className="text-gray-600 mt-1">
-          Please complete your daily check-in to confirm your attendance.
-        </p>
-        <button
-          className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-          onClick={() => setIsCheckInOpen(true)}
+      <div className="grid grid-cols-2 gap-4">
+        <div
+          onClick={() => navigate("/timetable")}
+          className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
-          Check In Now
-        </button>
+          <h2 className="text-lg font-bold text-purple-700">Timetable</h2>
+          <p className="text-gray-600 mt-2">Next: Cyber Threat Intelligence (12:00)</p>
+        </div>
 
-        {checkInSuccess && (
-          <p className="mt-2 text-green-600 font-semibold">✅ Checked in successfully</p>
-        )}
+        <div className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition">
+          <h2 className="text-lg font-bold text-purple-700">Mail</h2>
+          <p className="text-gray-600 mt-2">No new messages</p>
+        </div>
+
+        <div
+          onClick={() => setIsCoursesOpen(true)}
+          className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+        >
+          <h2 className="text-lg font-bold text-purple-700">Courses</h2>
+          <p className="text-3xl font-semibold mt-2">{TIMETABLE_MODULES.length}</p>
+        </div>
+
+        <div
+          onClick={() => setIsCheckInOpen(true)}
+          className="bg-purple-100 rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+        >
+          <h2 className="text-lg font-bold text-purple-700">Student Check-In</h2>
+          <p className="text-gray-600 mt-2">Tap to enter your lecture code</p>
+          {checkInSuccess && (
+            <p className="mt-2 text-green-600 font-semibold">✅ Checked in</p>
+          )}
+        </div>
       </div>
 
-      {/* Check-In Modal */}
+      <div className="bg-white rounded-2xl p-4 shadow-md">
+        <h2 className="text-lg font-bold text-purple-700">Newsroom</h2>
+        <p className="text-gray-700 mt-1">
+          WLV Student Newsletter: Welcome to semester 1 2025/26. Stay updated with
+          the latest news and events from the University.
+        </p>
+      </div>
+
       {isCheckInOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-xl p-6 shadow-lg w-80">
-            <h3 className="text-lg font-bold text-purple-700 mb-3">Enter Lecture Code</h3>
+            <h3 className="text-lg font-bold text-purple-700 mb-3">
+              Enter Lecture Code
+            </h3>
             <input
               type="text"
               placeholder="Enter code..."
@@ -84,34 +120,26 @@ const Home = () => {
         </div>
       )}
 
-      {/* 🔹 Timetable Preview */}
-      <div className="bg-white rounded-2xl p-4 shadow-md">
-        <h2 className="text-lg font-bold text-purple-700 mb-2">Upcoming Classes</h2>
-        <ul className="space-y-2 text-gray-700">
-          <li>Tue 30 – Cyber Threat Intelligence (12:00)</li>
-          <li>Wed 01 – No events</li>
-        </ul>
-        <button
-          onClick={() => navigate("/timetable")}
-          className="mt-3 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-        >
-          View Full Timetable
-        </button>
-      </div>
-
-      {/* 🔹 Courses */}
-      <div className="bg-white rounded-2xl p-4 shadow-md flex items-center justify-between">
-        <h2 className="text-lg font-bold text-purple-700">Courses</h2>
-        <span className="text-2xl font-semibold">25</span>
-      </div>
-
-      {/* 🔹 Newsroom */}
-      <div className="bg-white rounded-2xl p-4 shadow-md">
-        <h2 className="text-lg font-bold text-purple-700">Newsroom</h2>
-        <p className="text-gray-700 mt-1">
-          WLV Student Newsletter: Welcome to semester 1 2025/26. Stay updated with the latest news and events from the University.
-        </p>
-      </div>
+      {isCoursesOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-xl p-6 shadow-lg w-80 relative">
+            <button
+              onClick={() => setIsCoursesOpen(false)}
+              className="absolute top-2 right-2 px-2 py-1 bg-gray-300 rounded hover:bg-gray-400"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-bold text-purple-700 mb-4">My Courses</h3>
+            <ul className="space-y-2 max-h-64 overflow-y-auto">
+              {TIMETABLE_MODULES.map((course, index) => (
+                <li key={index} className="p-2 border-b border-gray-200 text-gray-700">
+                  {course}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
