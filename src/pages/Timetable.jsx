@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { TIMETABLE_EVENTS } from "../data/timetable.js";
+import { useMemo, useState, useEffect } from "react";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const toMins = (hhmm) => {
@@ -27,26 +26,61 @@ const startOfWeekMonday = (ref = new Date()) => {
   return d;
 };
 
+// 🔹 Module color map
+const moduleColors = {
+  "Human Computer Interaction": "#8b5cf6", // purple
+  "Cyber Security": "#22c55e",             // green
+  "Software Engineering": "#f59e0b",       // amber
+};
+
 export default function Timetable() {
   const [showTodayOnly, setShowTodayOnly] = useState(false);
   const [selectedDay, setSelectedDay] = useState("All Week");
+  const [events, setEvents] = useState([]);   // 🔹 fetched data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const now = new Date();
   const todayName = now.toLocaleDateString("en-GB", { weekday: "long" });
   const nowMins = now.getHours() * 60 + now.getMinutes();
 
-  // Enrich: start/end minutes + day index
+  // 🔹 Fetch timetable from backend
+  useEffect(() => {
+    const fetchTimetable = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/timetable", {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to load timetable");
+        const data = await res.json();
+        setEvents(data.timetable || []);
+      } catch (err) {
+        console.error(err);
+        setError("⚠️ Could not load timetable");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTimetable();
+  }, []);
+
+  // Enrich: start/end minutes + day index + color
   const enriched = useMemo(() => {
-    return TIMETABLE_EVENTS.map((item) => {
+    return events.map((item) => {
       const [start, end] = item.time.split(" - ");
       return {
         ...item,
         startMins: toMins(start),
         endMins: toMins(end),
         dayIdx: DAYS.indexOf(item.day),
+        color: moduleColors[item.module] || "#94a3b8", // fallback gray
       };
     });
-  }, []);
+  }, [events]);
 
   // Sort by day -> start time
   const sorted = useMemo(() => {
@@ -103,7 +137,6 @@ export default function Timetable() {
   const exportICS = () => {
     if (empty) return;
     const weekStart = startOfWeekMonday(now); // Monday of current week
-    // flatten current view for export
     const items = groups.flatMap(g => g.classes.map(c => ({ ...c, day: g.day })));
     const lines = [
       "BEGIN:VCALENDAR",
@@ -114,7 +147,6 @@ export default function Timetable() {
       const dayIdx = DAYS.indexOf(c.day);
       const classDate = new Date(weekStart);
       classDate.setDate(weekStart.getDate() + dayIdx);
-      // start / end times
       const [startStr, endStr] = c.time.split(" - ");
       const [sh, sm] = startStr.split(":").map(Number);
       const [eh, em] = endStr.split(":").map(Number);
@@ -146,13 +178,16 @@ export default function Timetable() {
     return String(text).replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
   }
   function cryptoRandom() {
-    // quick UID generator
     return "uid-" + Math.random().toString(36).slice(2) + Date.now();
   }
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-3">Weekly Timetable</h2>
+
+      {/* Loading / Error */}
+      {loading && <div>⏳ Loading timetable...</div>}
+      {error && <div className="text-red-600">{error}</div>}
 
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center mb-4">
@@ -199,7 +234,7 @@ export default function Timetable() {
       )}
 
       {/* Empty state */}
-      {empty && (
+      {empty && !loading && !error && (
         <div className="text-gray-600">No classes in this view 🎉</div>
       )}
 
@@ -290,6 +325,3 @@ export default function Timetable() {
     </div>
   );
 }
-
-// Re-export so older imports (e.g. Grades) still work.
-export { TIMETABLE_MODULES } from "../data/timetable.js";

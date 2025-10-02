@@ -1,4 +1,4 @@
-import { useState } from "react";   // ✅ Already added
+import { useState, useEffect } from "react";   // ✅ Already added
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from "react-router-dom"; // ✅ useNavigate added
 import Home from "./pages/Home.jsx";
 import Timetable from "./pages/Timetable.jsx";
@@ -13,14 +13,22 @@ function AppContent() {
   const [searchError, setSearchError] = useState(""); // ✅ Error message state
   const navigate = useNavigate(); // ✅ Needed for search navigation
 
-  // ✅ Authentication state
+  // ✅ Authentication state (use token from localStorage)
   const [isAuthenticated, setIsAuthenticated] = useState(
-    localStorage.getItem("isAuthenticated") === "true"
+    !!localStorage.getItem("token")
   );
+
+  // ✅ Keep auth state in sync if token exists
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   const handleSignOut = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("token");  // ✅ clear token
+    localStorage.removeItem("isAuthenticated"); // optional: clean up old flag
     navigate("/login");
     setMenuOpen(false);
   };

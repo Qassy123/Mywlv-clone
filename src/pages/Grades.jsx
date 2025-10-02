@@ -1,6 +1,5 @@
 // src/pages/Grades.jsx
-import React, { useState } from "react";
-import { GRADES } from "../data/grades";
+import React, { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -19,7 +18,7 @@ import {
 import { utils, writeFile } from "xlsx";
 // For PDF export
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable"; // ✅ FIXED: correct import
 
 export default function Grades() {
   const [selectedModule, setSelectedModule] = useState(null);
@@ -29,13 +28,44 @@ export default function Grades() {
   const [sortOrder, setSortOrder] = useState(null);
   const [filter, setFilter] = useState("all");
 
-  // Base grades (no prediction)
-  const [gradesData] = useState([...GRADES]);
+  // 🔹 Grades data from backend only
+  const [gradesData, setGradesData] = useState([]);
+
+  // 🔹 Fetch grades on load
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch("http://localhost:5000/grades", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        if (data.grades && Array.isArray(data.grades)) {
+          const formatted = data.grades.map((g) => ({
+            module: g.module,
+            assignment: g.assignment || "Final Exam",
+            grade: parseInt(g.grade, 10),
+            breakdown: g.breakdown || [
+              { part: "Overall", grade: parseInt(g.grade, 10), reason: "From database" },
+            ],
+          }));
+          setGradesData(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to fetch grades:", err);
+      }
+    };
+
+    fetchGrades();
+  }, []);
 
   // Calculations
   const average =
     gradesData.reduce((acc, g) => acc + g.grade, 0) /
-      gradesData.length || 0;
+    (gradesData.length || 1);
 
   // Sorting logic
   let displayedGrades = [...gradesData];
@@ -50,7 +80,7 @@ export default function Grades() {
   const chartData = gradesData.map((g, idx) => ({
     name: g.module,
     grade: g.grade,
-    index: idx + 1, // for line chart
+    index: idx + 1,
   }));
   const pieData = [
     { name: "Passed", value: gradesData.filter((g) => g.grade >= 50).length },
@@ -59,11 +89,13 @@ export default function Grades() {
   const COLORS = ["#22c55e", "#ef4444"];
 
   // Highest/Lowest
-  const highest = gradesData.reduce((a, b) =>
-    a.grade > b.grade ? a : b
+  const highest = gradesData.reduce(
+    (a, b) => (a.grade > b.grade ? a : b),
+    { grade: 0, module: "N/A" }
   );
-  const lowest = gradesData.reduce((a, b) =>
-    a.grade < b.grade ? a : b
+  const lowest = gradesData.reduce(
+    (a, b) => (a.grade < b.grade ? a : b),
+    { grade: 100, module: "N/A" }
   );
 
   // Progress tracker
@@ -85,7 +117,7 @@ export default function Grades() {
     writeFile(wb, "grades.csv");
   };
 
-  // Export to PDF
+  // ✅ Export to PDF (fixed)
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.text("Grades Report", 14, 16);
@@ -94,7 +126,7 @@ export default function Grades() {
       g.assignment,
       g.grade + "%",
     ]);
-    doc.autoTable({
+    autoTable(doc, {       // ✅ FIXED: use autoTable function
       head: [["Module", "Assignment", "Grade"]],
       body: tableData,
       startY: 20,
@@ -239,7 +271,7 @@ export default function Grades() {
               <Tooltip
                 formatter={(value, name, props) => [
                   `Grade: ${value}%`,
-                  props.payload.name, // show module name
+                  props.payload.name,
                 ]}
               />
               <Line type="monotone" dataKey="grade" stroke="#82ca9d" />
@@ -248,7 +280,7 @@ export default function Grades() {
         </div>
       </div>
 
-      {/* Popup Card (unchanged logic) */}
+      {/* Popup Card */}
       {selectedModule && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">

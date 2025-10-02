@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import { TIMETABLE_EVENTS, TIMETABLE_MODULES } from "../data/timetable.js";
 
 // ✅ banner images
 import banner1 from "../assets/banner1.jpg";
@@ -36,7 +35,31 @@ const Home = ({ highlight }) => {
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [mailRead, setMailRead] = useState(false);
+
+  // 🔗 NEW: State for DB-driven data
+  const [modules, setModules] = useState([]);
+  const [events, setEvents] = useState([]);
+
   const navigate = useNavigate();
+
+  // 🔗 Fetch timetable + modules from backend
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    // fetch timetable
+    fetch("http://localhost:5000/timetable", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.timetable) {
+          setEvents(data.timetable);
+          setModules([...new Set(data.timetable.map((e) => e.module))]); // unique module list
+        }
+      })
+      .catch((err) => console.error("Error fetching timetable:", err));
+  }, []);
 
   const handleCheckIn = () => {
     if (checkInCode === "1234") {
@@ -58,7 +81,7 @@ const Home = ({ highlight }) => {
     return h * 60 + m;
   };
 
-  const enriched = TIMETABLE_EVENTS.map((e) => {
+  const enriched = events.map((e) => {
     const [start, end] = e.time.split(" - ");
     return { ...e, startMins: toMins(start), endMins: toMins(end), dayIdx: DAYS.indexOf(e.day) };
   });
@@ -147,7 +170,7 @@ const Home = ({ highlight }) => {
           className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Courses</h2>
-          <p className="text-3xl font-semibold mt-2">{TIMETABLE_MODULES.length}</p>
+          <p className="text-3xl font-semibold mt-2">{modules.length}</p>
         </div>
 
         <div
@@ -213,7 +236,7 @@ const Home = ({ highlight }) => {
             </button>
             <h3 className="text-lg font-bold text-purple-700 mb-4">My Courses</h3>
             <ul className="space-y-2 max-h-64 overflow-y-auto">
-              {TIMETABLE_MODULES.map((course, index) => (
+              {modules.map((course, index) => (
                 <li key={index} className="p-2 border-b border-gray-200 text-gray-700">
                   {applyHighlight(course, highlight)}
                 </li>

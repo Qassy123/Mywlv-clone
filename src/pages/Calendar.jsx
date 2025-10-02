@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
-
-const INITIAL_EVENTS = [
-  { id: 1, date: "2025-10-01", title: "Assignment Deadline", description: "Submit via Canvas.", done: false },
-  { id: 2, date: "2025-10-02", title: "Group Project Meeting", description: "Team sync in Lab C2.", done: false },
-  { id: 3, date: "2025-10-06", title: "Careers Workshop", description: "CV and interview skills.", done: false },
-];
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function Calendar() {
   const [events, setEvents] = useState([]);
@@ -16,18 +12,49 @@ export default function Calendar() {
   const [monthView, setMonthView] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("events");
-    if (saved) {
-      setEvents(JSON.parse(saved));
-    } else {
-      setEvents(INITIAL_EVENTS);
-    }
-  }, []);
+  // ---- helpers (added) ----
+  const pad = (n) => String(n).padStart(2, "0");
+  const formatDateLocal = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const normalizeDate = (val) => {
+    if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? String(val || "") : formatDateLocal(d);
+  };
+  // -------------------------
 
   useEffect(() => {
-    localStorage.setItem("events", JSON.stringify(events));
-  }, [events]);
+    const fetchEvents = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch("http://localhost:5000/calendar", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          // map SQL row -> UI shape, normalize date locally
+          const mapped = (data.calendar || []).map((ev, i) => ({
+            ...ev,
+            id: ev.id ?? i + 1, // fallback if backend didn’t include id
+            date: normalizeDate(ev.date),
+            // ✅ default to false so button shows "Done"
+            done: false,
+          }));
+          setEvents(mapped);
+        } else {
+          console.error("Failed to fetch events:", data.error || data);
+        }
+      } catch (err) {
+        console.error("Server error:", err);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   const isPriority = (dateStr) => {
     const today = new Date();
@@ -64,7 +91,14 @@ export default function Calendar() {
   const addEvent = (e) => {
     e.preventDefault();
     if (!newEvent.title || !newEvent.date) return;
-    setEvents([...events, { id: Date.now(), ...newEvent }]);
+    setEvents([
+      ...events,
+      {
+        id: Date.now(),
+        ...newEvent,
+        date: normalizeDate(newEvent.date),
+      },
+    ]);
     setNewEvent({ title: "", date: "", description: "", done: false });
     setShowForm(false);
   };
@@ -77,6 +111,7 @@ export default function Calendar() {
   };
 
   const exportICS = () => {
+    if (!events.length) return;
     let icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nPRODID:-//myWLV Clone//EN\n`;
     events.forEach(ev => {
       const startDate = new Date(ev.date).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
@@ -87,20 +122,34 @@ export default function Calendar() {
     saveAs(blob, "mywlv-events.ics");
   };
 
-  // ➕ NEW: export CSV
   const exportCSV = () => {
+    if (!events.length) return;
     const header = "Title,Date,Description,Done\n";
     const rows = events.map(ev => `${ev.title},${ev.date},${ev.description},${ev.done}`);
     const blob = new Blob([header + rows.join("\n")], { type: "text/csv;charset=utf-8" });
     saveAs(blob, "mywlv-events.csv");
   };
 
-  // ➕ NEW: today banner + next 3 deadlines
-  const todayStr = new Date().toISOString().split("T")[0];
+  const exportPDF = () => {
+    if (!events.length) return;
+    const doc = new jsPDF();
+    doc.text("Calendar Events", 14, 15);
+    autoTable(doc, {
+      head: [["Title", "Date", "Description", "Done"]],
+      body: events.map(ev => [
+        ev.title,
+        ev.date,
+        ev.description,
+        ev.done ? "Yes" : "No",
+      ]),
+    });
+    doc.save("mywlv-events.pdf");
+  };
+
+  const todayStr = formatDateLocal(new Date());
   const todayEvents = events.filter(ev => ev.date === todayStr);
   const nextDeadlines = filteredEvents.filter(ev => !ev.done).slice(0, 3);
 
-  // 12-month calendar view (unchanged)
   const renderCalendar = () => {
     const year = new Date().getFullYear();
     const months = Array.from({ length: 12 }, (_, i) => new Date(year, i));
@@ -117,21 +166,22 @@ export default function Calendar() {
               <h3 className="text-center font-bold mb-2">{monthName} {year}</h3>
               <div className="grid grid-cols-7 gap-1 text-xs">
                 {Array.from({ length: daysInMonth }, (_, d) => {
-                  const dateStr = new Date(year, month, d + 1).toISOString().split("T")[0];
+                  const dateStr = formatDateLocal(new Date(year, month, d + 1)); // local-safe
                   const dayEvents = events.filter(ev => ev.date === dateStr);
                   const isToday = dateStr === todayStr;
 
                   return (
-                    <div key={d} className={`border min-h-[80px] p-1 ${isToday ? "ring-2 ring-purple-500" : ""}`}>
+                    <div key={dateStr} className={`border min-h-[80px] p-1 ${isToday ? "ring-2 ring-purple-500" : ""}`}>
                       <p className="text-gray-500">{d + 1}</p>
                       {dayEvents.map((ev, i) => (
                         <div
-                          key={ev.id}
+                          key={ev.id ?? `${ev.title}-${ev.date}-${i}`}
                           title={ev.title}
                           onClick={() => setSelectedEvent(ev)}
                           className={`cursor-pointer text-[9px] rounded px-1 mt-1 w-full truncate block ${
-                            ev.done ? "bg-gray-300 line-through" : 
-                            ["bg-purple-200", "bg-blue-200", "bg-green-200", "bg-yellow-200", "bg-pink-200"][i % 5]
+                            ev.done
+                              ? "bg-gray-300 line-through"
+                              : ["bg-purple-200", "bg-blue-200", "bg-green-200", "bg-yellow-200", "bg-pink-200"][(Number(ev.id) || i) % 5]
                           }`}
                         >
                           {ev.title}
@@ -152,7 +202,6 @@ export default function Calendar() {
     <div>
       <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
 
-      {/* ➕ NEW: Today’s banner */}
       <div className="bg-purple-100 p-3 rounded mb-4">
         <h3 className="font-bold">
           Today is {new Date().toLocaleDateString("en-UK", { weekday: "long", day: "numeric", month: "long" })}
@@ -160,13 +209,12 @@ export default function Calendar() {
         <p>{todayEvents.length} event(s) today</p>
       </div>
 
-      {/* ➕ NEW: Next 3 deadlines */}
       {nextDeadlines.length > 0 && (
         <div className="bg-yellow-100 p-3 rounded mb-4">
           <h3 className="font-bold">Next Deadlines</h3>
           <ul className="list-disc ml-5">
-            {nextDeadlines.map(ev => (
-              <li key={ev.id}>
+            {nextDeadlines.map((ev, i) => (
+              <li key={ev.id ?? `${ev.title}-${ev.date}-${i}`}>
                 {ev.title} – {new Date(ev.date).toLocaleDateString()} {isPriority(ev.date) && "⚠️"}
               </li>
             ))}
@@ -193,17 +241,15 @@ export default function Calendar() {
         </select>
         <button onClick={() => setShowForm(!showForm)} className="bg-purple-700 text-white px-3 rounded hover:bg-purple-800">+ Add Event</button>
         <button onClick={exportICS} className="bg-green-600 text-white px-3 rounded hover:bg-green-700">Export .ICS</button>
-        {/* ➕ NEW: CSV button */}
         <button onClick={exportCSV} className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700">Export CSV</button>
+        <button onClick={exportPDF} className="bg-gray-700 text-white px-3 rounded hover:bg-gray-800">Export PDF</button>
         <button onClick={() => setMonthView(!monthView)} className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700">
           {monthView ? "Switch to List View" : "Switch to 12-Month View"}
         </button>
       </div>
 
-      {/* rest of your code stays exactly the same… */}
       {showForm && (
         <form onSubmit={addEvent} className="mb-6 bg-gray-100 p-4 rounded">
-          {/* form unchanged */}
           <input
             type="text"
             placeholder="Event title"
@@ -234,7 +280,7 @@ export default function Calendar() {
           ) : (
             filteredEvents.map((ev, i) => (
               <div
-                key={ev.id}
+                key={ev.id ?? `${ev.title}-${ev.date}-${i}`}
                 className={`p-4 rounded shadow flex justify-between items-start ${
                   ["bg-purple-100", "bg-blue-100", "bg-green-100", "bg-yellow-100", "bg-pink-100"][i % 5]
                 } ${ev.done ? "opacity-60 line-through" : ""}`}
@@ -255,7 +301,6 @@ export default function Calendar() {
                     )}
                   </h3>
                   <p className="text-gray-700">{ev.description}</p>
-                  {/* ➕ NEW: Reminder if event is tomorrow */}
                   {new Date(ev.date).toDateString() === new Date(Date.now() + 86400000).toDateString() && (
                     <p className="text-orange-600 font-semibold">Reminder: This is tomorrow!</p>
                   )}
@@ -269,10 +314,13 @@ export default function Calendar() {
         </div>
       )}
 
-      {/* Modal (unchanged except PRIORITY badge + Done button already added before) */}
       {selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-6 rounded shadow-lg w-full max-w-lg ${["bg-purple-100", "bg-blue-100", "bg-green-100", "bg-yellow-100", "bg-pink-100"][selectedEvent.id % 5]}`}>
+          <div
+            className={`p-6 rounded shadow-lg w-full max-w-lg ${
+              ["bg-purple-100", "bg-blue-100", "bg-green-100", "bg-yellow-100", "bg-pink-100"][(Number(selectedEvent?.id) || 0) % 5]
+            }`}
+          >
             <h2 className="text-2xl font-bold mb-2">{selectedEvent.title}</h2>
             <p className="text-gray-600 mb-2">
               {new Date(selectedEvent.date).toLocaleDateString("en-UK", {

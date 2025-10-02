@@ -8,16 +8,32 @@ const Login = ({ setIsAuthenticated }) => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Mock credentials for now
-    if (email === "student@wlv.ac.uk" && password === "password123") {
-      setIsAuthenticated(true);
-      localStorage.setItem("isAuthenticated", "true"); // persist login
-      navigate("/");
-    } else {
-      setError("Invalid email or password ❌");
+    try {
+      // Call backend login API
+      const response = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // ✅ Save token + persist login
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("isAuthenticated", "true");
+
+        setIsAuthenticated(true); // update React state
+        navigate("/"); // redirect to homepage
+      } else {
+        setError(data.error || "Invalid email or password ❌");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Server error. Please try again later ❌");
     }
   };
 

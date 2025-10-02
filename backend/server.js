@@ -33,14 +33,20 @@ app.post("/register", (req, res) => {
   }
 
   db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
-    if (err) return res.status(500).json({ error: "Database error" });
+    if (err) {
+      console.error("❌ SQL ERROR in REGISTER (check if users table exists):", err);
+      return res.status(500).json({ error: "Database error", details: err });
+    }
     if (results.length > 0) return res.status(400).json({ error: "User already exists" });
 
     db.query(
       "INSERT INTO users (email, password) VALUES (?, ?)",
       [email, password],
       (err, result) => {
-        if (err) return res.status(500).json({ error: "Database error" });
+        if (err) {
+          console.error("❌ SQL ERROR inserting user:", err);
+          return res.status(500).json({ error: "Database error", details: err });
+        }
         res.json({ message: "✅ User registered successfully", id: result.insertId });
       }
     );
@@ -51,17 +57,30 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  db.query("SELECT * FROM users WHERE email = ? AND password = ?", [email, password], (err, results) => {
-    if (err) return res.status(500).json({ error: "Database error" });
-    if (results.length === 0) return res.status(401).json({ error: "Invalid credentials" });
+  console.log("🔎 Login attempt with:", email, password);
 
-    const user = results[0];
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+  db.query(
+    "SELECT * FROM users WHERE email = ? AND password = ?",
+    [email, password],
+    (err, results) => {
+      if (err) {
+        console.error("❌ SQL ERROR in LOGIN:", err);
+        return res.status(500).json({ error: "Database error", details: err });
+      }
+      if (results.length === 0) {
+        console.warn("⚠️ Invalid login attempt for email:", email);
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
 
-    res.json({ message: "✅ Login successful", token });
-  });
+      const user = results[0];
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      console.log("✅ Login successful for:", email);
+      res.json({ message: "✅ Login successful", token });
+    }
+  );
 });
 
 // ------------------- VERIFY TOKEN MIDDLEWARE -------------------
@@ -79,6 +98,7 @@ function verifyToken(req, res, next) {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
+      console.error("❌ JWT verification failed:", err);
       return res.status(401).json({ error: "❌ Invalid token" });
     }
     req.user = decoded;
@@ -95,7 +115,10 @@ app.get("/grades", verifyToken, (req, res) => {
     "SELECT module, grade FROM grades WHERE user_id = ?",
     [userId],
     (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
+      if (err) {
+        console.error("❌ SQL ERROR in GRADES:", err);
+        return res.status(500).json({ error: "Database error", details: err });
+      }
       res.json({
         message: `✅ Grades loaded for ${req.user.email}`,
         grades: results,
@@ -111,7 +134,10 @@ app.get("/timetable", verifyToken, (req, res) => {
     "SELECT day, module, time, room, status FROM timetable WHERE user_id = ?",
     [userId],
     (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
+      if (err) {
+        console.error("❌ SQL ERROR in TIMETABLE:", err);
+        return res.status(500).json({ error: "Database error", details: err });
+      }
       res.json({
         message: `✅ Timetable loaded for ${req.user.email}`,
         timetable: results,
@@ -120,14 +146,17 @@ app.get("/timetable", verifyToken, (req, res) => {
   );
 });
 
-// ✅ CALENDAR (new, from MySQL)
+// ✅ CALENDAR (now includes id for unique keys)
 app.get("/calendar", verifyToken, (req, res) => {
   const userId = req.user.id;
   db.query(
-    "SELECT title, description, date, status, priority FROM calendar WHERE user_id = ?",
+    "SELECT id, title, description, date, status, priority FROM calendar WHERE user_id = ?",
     [userId],
     (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
+      if (err) {
+        console.error("❌ SQL ERROR in CALENDAR:", err);
+        return res.status(500).json({ error: "Database error", details: err });
+      }
       res.json({
         message: `✅ Calendar loaded for ${req.user.email}`,
         calendar: results,
