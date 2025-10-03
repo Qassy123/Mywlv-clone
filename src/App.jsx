@@ -6,9 +6,11 @@ import Calendar from "./pages/Calendar.jsx";
 import Grades from "./pages/Grades.jsx";
 import Login from "./pages/Login.jsx"; // ✅ New Login page
 import { TIMETABLE_MODULES } from "./data/timetable.js"; // ✅ Import modules for course-based search
+import uowLogo from "./assets/uow-logo.jpg"; // ✅ Import logo from assets
 
 function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false); // ✅ Burger menu state
+  const [profileOpen, setProfileOpen] = useState(false); // ✅ Profile dropdown state
   const [searchQuery, setSearchQuery] = useState(""); // ✅ Global search state
   const [searchError, setSearchError] = useState(""); // ✅ Error message state
   const navigate = useNavigate(); // ✅ Needed for search navigation
@@ -31,6 +33,7 @@ function AppContent() {
     localStorage.removeItem("isAuthenticated"); // optional: clean up old flag
     navigate("/login");
     setMenuOpen(false);
+    setProfileOpen(false);
   };
 
   // ✅ Search handler with prefixes + error message + 4-char minimum
@@ -107,12 +110,12 @@ function AppContent() {
   return (
     <>
       {/* University Header */}
-      <header className="bg-purple-800 text-white">
+      <header className="bg-purple-800 text-white relative">
         <div className="mx-auto max-w-6xl flex items-center justify-between p-4">
           {/* Logo + Title */}
           <div className="flex items-center gap-4">
             <img
-              src="/uow-logo.PNG" // ✅ keep uppercase to match actual filename
+              src={uowLogo} // ✅ Updated to import from assets
               alt="University of Wolverhampton Logo"
               className="h-16 w-auto object-contain"
             />
@@ -121,19 +124,46 @@ function AppContent() {
             </h1>
           </div>
 
-          {/* Search Bar (Desktop only) */}
+          {/* Search Bar + Profile (Desktop only) */}
           {isAuthenticated && (
-            <div className="hidden md:block">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={handleSearch}   // ✅ navigation search
-                className="px-3 py-2 rounded-lg text-black w-64 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              {searchError && (
-                <p className="text-red-500 text-sm mt-1">{searchError}</p>
-              )}
+            <div className="hidden md:flex items-center gap-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearch}   // ✅ navigation search
+                  className="px-3 py-2 rounded-lg text-black w-64 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                {searchError && (
+                  <p className="text-red-500 text-sm mt-1">{searchError}</p>
+                )}
+              </div>
+
+              {/* ✅ Profile Avatar (Desktop) */}
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center font-bold text-purple-700"
+                >
+                  QS
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50">
+                    <p className="font-bold text-purple-800">Qasim Shah</p>
+                    <p className="text-sm text-gray-600">Student ID: 2364710</p>
+                    <p className="text-sm text-gray-600">dummy@wlv.ac.uk</p>
+                    <hr className="my-2" />
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -142,7 +172,6 @@ function AppContent() {
             className="md:hidden text-white focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            {/* Simple hamburger icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -151,11 +180,7 @@ function AppContent() {
               stroke="currentColor"
               className="w-8 h-8"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         </div>
@@ -167,135 +192,77 @@ function AppContent() {
           <div className="mx-auto max-w-6xl flex flex-col md:flex-row gap-2 md:gap-4 p-4">
             {/* Desktop Navigation */}
             <div className="hidden md:flex gap-2">
-              <NavLink
-                to="/"
-                end
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded text-center ${
-                    isActive
-                      ? "bg-purple-900 text-white"
-                      : "bg-purple-700 text-white hover:bg-purple-800"
-                  }`
-                }
-              >
-                Home
-              </NavLink>
-              <NavLink
-                to="/timetable"
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded text-center ${
-                    isActive
-                      ? "bg-purple-900 text-white"
-                      : "bg-purple-700 text-white hover:bg-purple-800"
-                  }`
-                }
-              >
-                Timetable
-              </NavLink>
-              <NavLink
-                to="/calendar"
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded text-center ${
-                    isActive
-                      ? "bg-purple-900 text-white"
-                      : "bg-purple-700 text-white hover:bg-purple-800"
-                  }`
-                }
-              >
-                Calendar
-              </NavLink>
-              <NavLink
-                to="/grades"
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded text-center ${
-                    isActive
-                      ? "bg-purple-900 text-white"
-                      : "bg-purple-700 text-white hover:bg-purple-800"
-                  }`
-                }
-              >
-                Grades
-              </NavLink>
-
-              {/* ✅ Desktop Sign Out button */}
+              <NavLink to="/" end className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Home</NavLink>
+              <NavLink to="/timetable" className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Timetable</NavLink>
+              <NavLink to="/calendar" className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Calendar</NavLink>
+              <NavLink to="/grades" className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Grades</NavLink>
               {isAuthenticated && (
-                <button
-                  onClick={handleSignOut}
-                  className="px-3 py-2 rounded text-center bg-red-600 text-white hover:bg-red-700"
-                >
-                  Sign Out
-                </button>
+                <button onClick={handleSignOut}
+                  className="px-3 py-2 rounded text-center bg-red-600 text-white hover:bg-red-700">Sign Out</button>
               )}
             </div>
 
             {/* Mobile Burger Menu Dropdown */}
             {menuOpen && (
               <div className="flex flex-col gap-2 md:hidden">
-                {/* ✅ Added search inside mobile menu */}
+                {/* ✅ Search inside mobile menu */}
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchQuery}
-                  onChange={handleSearch}   // ✅ navigation search
+                  onChange={handleSearch}
                   className="px-3 py-2 rounded-lg text-black mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 {searchError && (
                   <p className="text-red-500 text-sm">{searchError}</p>
                 )}
 
-                <NavLink
-                  to="/"
-                  end
-                  className={({ isActive }) =>
-                    `px-3 py-2 rounded text-center ${
-                      isActive
-                        ? "bg-purple-900 text-white"
-                        : "bg-purple-700 text-white hover:bg-purple-800"
-                    }`
-                  }
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Home
-                </NavLink>
-                <NavLink
-                  to="/timetable"
-                  className={({ isActive }) =>
-                    `px-3 py-2 rounded text-center ${
-                      isActive
-                        ? "bg-purple-900 text-white"
-                        : "bg-purple-700 text-white hover:bg-purple-800"
-                    }`
-                  }
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Timetable
-                </NavLink>
-                <NavLink
-                  to="/calendar"
-                  className={({ isActive }) =>
-                    `px-3 py-2 rounded text-center ${
-                      isActive
-                        ? "bg-purple-900 text-white"
-                        : "bg-purple-700 text-white hover:bg-purple-800"
-                    }`
-                  }
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Calendar
-                </NavLink>
-                <NavLink
-                  to="/grades"
-                  className={({ isActive }) =>
-                    `px-3 py-2 rounded text-center ${
-                      isActive
-                        ? "bg-purple-900 text-white"
-                        : "bg-purple-700 text-white hover:bg-purple-800"
-                    }`
-                  }
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Grades
-                </NavLink>
+                {/* ✅ Profile Avatar (Mobile) */}
+                <div className="relative mb-2">
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center font-bold text-purple-700"
+                  >
+                    QS
+                  </button>
+
+                  {profileOpen && (
+                    <div className="absolute left-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50">
+                      <p className="font-bold text-purple-800">Qasim Shah</p>
+                      <p className="text-sm text-gray-600">Student ID: 2364710</p>
+                      <p className="text-sm text-gray-600">dummy@wlv.ac.uk</p>
+                      <hr className="my-2" />
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* ✅ DASHBOARDS */}
+                <p className="text-xs font-bold text-gray-500 mt-2">DASHBOARDS</p>
+                <NavLink to="/" end onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Home</NavLink>
+                <NavLink to="/timetable" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Timetable</NavLink>
+                <NavLink to="/calendar" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Calendar</NavLink>
+                <NavLink to="/grades" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Grades</NavLink>
+
+                {/* ✅ APPS */}
+                <p className="text-xs font-bold text-gray-500 mt-2">APPS</p>
+                <NavLink to="/" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Mail</NavLink>
+                <NavLink to="/" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Newsroom</NavLink>
 
                 {/* ✅ Sign Out button in burger menu */}
                 <button
@@ -311,7 +278,7 @@ function AppContent() {
       )}
 
       {/* Page Content */}
-      <main className="mx-auto max-w-6xl p-6">
+      <main className="mx-auto max-w-6xl p-6 mb-16">
         <Routes>
           {!isAuthenticated ? (
             <Route path="*" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
@@ -338,6 +305,27 @@ function AppContent() {
           </div>
         )}
       </main>
+
+      {/* ✅ Bottom Navigation (Mobile only) */}
+      {isAuthenticated && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-2 shadow-md z-50">
+          <NavLink to="/" end className={({ isActive }) =>
+            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500"}`}>
+            <span className="material-icons">home</span>
+            <span className="text-xs">Home</span>
+          </NavLink>
+          <NavLink to="/" className={({ isActive }) =>
+            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500"}`}>
+            <span className="material-icons">mail</span>
+            <span className="text-xs">Mail</span>
+          </NavLink>
+          <NavLink to="/calendar" className={({ isActive }) =>
+            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500"}`}>
+            <span className="material-icons">event</span>
+            <span className="text-xs">Calendar</span>
+          </NavLink>
+        </nav>
+      )}
     </>
   );
 }

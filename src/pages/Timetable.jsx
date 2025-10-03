@@ -26,12 +26,23 @@ const startOfWeekMonday = (ref = new Date()) => {
   return d;
 };
 
-// 🔹 Module color map
+// 🔹 Fixed module color handling
 const moduleColors = {
   "Human Computer Interaction": "#8b5cf6", // purple
   "Cyber Security": "#22c55e",             // green
   "Software Engineering": "#f59e0b",       // amber
 };
+// fallback palette for everything else
+const colorPalette = [
+  "#f87171", // red
+  "#60a5fa", // blue
+  "#34d399", // emerald
+  "#fbbf24", // yellow
+  "#a78bfa", // violet
+  "#fb923c", // orange
+  "#2dd4bf", // teal
+  "#f472b6", // pink
+];
 
 export default function Timetable() {
   const [showTodayOnly, setShowTodayOnly] = useState(false);
@@ -70,14 +81,21 @@ export default function Timetable() {
 
   // Enrich: start/end minutes + day index + color
   const enriched = useMemo(() => {
+    const colorMap = { ...moduleColors };
+    let colorIndex = 0;
     return events.map((item) => {
       const [start, end] = item.time.split(" - ");
+      // assign color: if not predefined, assign from palette
+      if (!colorMap[item.module]) {
+        colorMap[item.module] = colorPalette[colorIndex % colorPalette.length];
+        colorIndex++;
+      }
       return {
         ...item,
         startMins: toMins(start),
         endMins: toMins(end),
         dayIdx: DAYS.indexOf(item.day),
-        color: moduleColors[item.module] || "#94a3b8", // fallback gray
+        color: colorMap[item.module],
       };
     });
   }, [events]);
