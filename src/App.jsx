@@ -7,6 +7,8 @@ import Grades from "./pages/Grades.jsx";
 import Login from "./pages/Login.jsx"; // ✅ New Login page
 import { TIMETABLE_MODULES } from "./data/timetable.js"; // ✅ Import modules for course-based search
 import uowLogo from "./assets/uow-logo.jpg"; // ✅ Import logo from assets
+import About from "./pages/About.jsx";
+import Privacy from "./pages/Privacy.jsx";
 
 function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false); 
@@ -206,6 +208,13 @@ function AppContent() {
                 `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Calendar</NavLink>
               <NavLink to="/grades" className={({ isActive }) =>
                 `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Grades</NavLink>
+
+              {/* ✅ NEW: Desktop links for About + Privacy */}
+              <NavLink to="/about" className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>About WLV</NavLink>
+              <NavLink to="/privacy" className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Privacy</NavLink>
+
               {isAuthenticated && (
                 <button onClick={handleSignOut}
                   className="px-3 py-2 rounded text-center bg-red-600 text-white hover:bg-red-700">Sign Out</button>
@@ -277,6 +286,12 @@ function AppContent() {
                 <NavLink to="/" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Newsroom</NavLink>
 
+                {/* ✅ FIXED: About + Privacy in mobile menu */}
+                <NavLink to="/about" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">About WLV</NavLink>
+                <NavLink to="/privacy" onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Privacy Policy</NavLink>
+
                 <button
                   onClick={handleSignOut}
                   className="px-3 py-2 rounded text-left text-red-600 hover:bg-gray-200"
@@ -300,6 +315,8 @@ function AppContent() {
               <Route path="/timetable" element={<Timetable />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/grades" element={<Grades />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
             </>
           )}
         </Routes>
