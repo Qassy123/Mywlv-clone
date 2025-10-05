@@ -102,6 +102,16 @@ const Home = ({ highlight }) => {
     }
   }
 
+  // --- NEW: Next Event (for homepage card) ---
+  let nextEvent = null;
+  if (inProgress) {
+    nextEvent = inProgress;
+  } else {
+    const upcomingToday = todayClasses.find((e) => e.startMins > nowMins);
+    if (upcomingToday) nextEvent = upcomingToday;
+    else nextEvent = enriched.find((e) => e.dayIdx > DAYS.indexOf(todayName));
+  }
+
   return (
     <div className="p-4 space-y-6">
       {/* ✅ Swiper with aspect ratio for consistent banners */}
@@ -183,6 +193,21 @@ const Home = ({ highlight }) => {
             <p className="mt-2 text-green-600 font-semibold">✅ Checked in</p>
           )}
         </div>
+      </div>
+
+      {/* ✅ NEW: Next Event Widget */}
+      <div className="bg-white rounded-2xl p-4 shadow-md">
+        <h2 className="text-lg font-bold text-purple-700">Next Event</h2>
+        {nextEvent ? (
+          <div className="mt-2">
+            <p className="font-semibold text-gray-800">{nextEvent.module}</p>
+            <p className="text-sm text-gray-600">
+              {nextEvent.day} • {nextEvent.time}
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-600 mt-2">No upcoming events 🎉</p>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl p-4 shadow-md">

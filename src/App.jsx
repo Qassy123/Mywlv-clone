@@ -9,46 +9,58 @@ import { TIMETABLE_MODULES } from "./data/timetable.js"; // ✅ Import modules f
 import uowLogo from "./assets/uow-logo.jpg"; // ✅ Import logo from assets
 
 function AppContent() {
-  const [menuOpen, setMenuOpen] = useState(false); // ✅ Burger menu state
-  const [profileOpen, setProfileOpen] = useState(false); // ✅ Profile dropdown state
-  const [searchQuery, setSearchQuery] = useState(""); // ✅ Global search state
-  const [searchError, setSearchError] = useState(""); // ✅ Error message state
-  const navigate = useNavigate(); // ✅ Needed for search navigation
+  const [menuOpen, setMenuOpen] = useState(false); 
+  const [profileOpen, setProfileOpen] = useState(false); 
+  const [searchQuery, setSearchQuery] = useState(""); 
+  const [searchError, setSearchError] = useState(""); 
+  const navigate = useNavigate(); 
 
-  // ✅ Authentication state (use token from localStorage)
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   );
 
-  // ✅ Keep auth state in sync if token exists
+  // ✅ Dark Mode State
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true"
+  );
+
   useEffect(() => {
     if (localStorage.getItem("token")) {
       setIsAuthenticated(true);
     }
   }, []);
 
+  // ✅ Sync darkMode with localStorage + HTML <html> tag
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("darkMode", "true");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("darkMode", "false");
+    }
+  }, [darkMode]);
+
   const handleSignOut = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("token");  // ✅ clear token
-    localStorage.removeItem("isAuthenticated"); // optional: clean up old flag
+    localStorage.removeItem("token");  
+    localStorage.removeItem("isAuthenticated"); 
     navigate("/login");
     setMenuOpen(false);
     setProfileOpen(false);
   };
 
-  // ✅ Search handler with prefixes + error message + 4-char minimum
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase().trim();
     setSearchQuery(value);
-    setSearchError(""); // reset error each time
+    setSearchError(""); 
 
-    if (!value) return; // do nothing if empty
+    if (!value) return; 
     if (value.length < 4) {
       setSearchError("Type at least 4 characters to search 🔍");
       return;
     }
 
-    // --- Grades page shortcuts ---
     if (
       value.startsWith("gra") || value.startsWith("gr") ||
       value.startsWith("mar") || value.includes("result") ||
@@ -57,7 +69,6 @@ function AppContent() {
     ) {
       navigate("/grades");
     }
-    // --- Timetable page shortcuts ---
     else if (
       value.startsWith("tim") || value.startsWith("ti") ||
       value.startsWith("mod") || value.includes("schedule") ||
@@ -66,7 +77,6 @@ function AppContent() {
     ) {
       navigate("/timetable");
     }
-    // --- Calendar page shortcuts ---
     else if (
       value.startsWith("cal") || value.startsWith("ca") ||
       value.startsWith("sch") || value.includes("event") ||
@@ -75,7 +85,6 @@ function AppContent() {
     ) {
       navigate("/calendar");
     }
-    // --- Home page shortcuts ---
     else if (
       value.startsWith("ho") || value.startsWith("hom") ||
       value.startsWith("dash") || value.includes("main") ||
@@ -83,25 +92,21 @@ function AppContent() {
     ) {
       navigate("/");
     }
-    // --- Mail (goes to Home) ---
     else if (
       value.includes("mail") || value.includes("inbox") ||
       value.includes("message") || value.includes("email")
     ) {
       navigate("/");
     }
-    // --- Newsroom keywords (go Home) ---
     else if (
       value.includes("news") || value.includes("newsletter") ||
       value.includes("semester") || value.includes("wlv news")
     ) {
       navigate("/");
     }
-    // --- Module name match (Timetable) ---
     else if (TIMETABLE_MODULES.some((m) => m.toLowerCase().includes(value))) {
       navigate("/timetable");
     }
-    // --- No match found ---
     else {
       setSearchError("No results match your search ❌");
     }
@@ -110,12 +115,12 @@ function AppContent() {
   return (
     <>
       {/* University Header */}
-      <header className="bg-purple-800 text-white relative">
+      <header className="bg-purple-800 text-white relative dark:bg-gray-900">
         <div className="mx-auto max-w-6xl flex items-center justify-between p-4">
           {/* Logo + Title */}
           <div className="flex items-center gap-4">
             <img
-              src={uowLogo} // ✅ Updated to import from assets
+              src={uowLogo}
               alt="University of Wolverhampton Logo"
               className="h-16 w-auto object-contain"
             />
@@ -132,7 +137,7 @@ function AppContent() {
                   type="text"
                   placeholder="Search..."
                   value={searchQuery}
-                  onChange={handleSearch}   // ✅ navigation search
+                  onChange={handleSearch}
                   className="px-3 py-2 rounded-lg text-black w-64 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 {searchError && (
@@ -140,7 +145,7 @@ function AppContent() {
                 )}
               </div>
 
-              {/* ✅ Profile Avatar (Desktop) */}
+              {/* Profile Avatar (Desktop) */}
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
@@ -150,11 +155,18 @@ function AppContent() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50">
-                    <p className="font-bold text-purple-800">Qasim Shah</p>
-                    <p className="text-sm text-gray-600">Student ID: 2364710</p>
-                    <p className="text-sm text-gray-600">dummy@wlv.ac.uk</p>
+                  <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50 dark:bg-gray-800 dark:text-white">
+                    <p className="font-bold text-purple-800 dark:text-purple-300">Qasim Shah</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Student ID: 2364710</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">dummy@wlv.ac.uk</p>
                     <hr className="my-2" />
+                    {/* ✅ Dark Mode Toggle */}
+                    <button
+                      onClick={() => setDarkMode(!darkMode)}
+                      className="w-full bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-3 py-1 rounded mb-2"
+                    >
+                      {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+                    </button>
                     <button
                       onClick={handleSignOut}
                       className="w-full bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
@@ -172,14 +184,8 @@ function AppContent() {
             className="md:hidden text-white focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-8 h-8"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              strokeWidth={2} stroke="currentColor" className="w-8 h-8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -188,7 +194,7 @@ function AppContent() {
 
       {/* Navigation */}
       {isAuthenticated && (
-        <nav className="bg-gray-100 border-b">
+        <nav className="bg-gray-100 border-b dark:bg-gray-800">
           <div className="mx-auto max-w-6xl flex flex-col md:flex-row gap-2 md:gap-4 p-4">
             {/* Desktop Navigation */}
             <div className="hidden md:flex gap-2">
@@ -209,7 +215,7 @@ function AppContent() {
             {/* Mobile Burger Menu Dropdown */}
             {menuOpen && (
               <div className="flex flex-col gap-2 md:hidden">
-                {/* ✅ Search inside mobile menu */}
+                {/* Search inside mobile menu */}
                 <input
                   type="text"
                   placeholder="Search..."
@@ -221,7 +227,7 @@ function AppContent() {
                   <p className="text-red-500 text-sm">{searchError}</p>
                 )}
 
-                {/* ✅ Profile Avatar (Mobile) */}
+                {/* Profile Avatar (Mobile) */}
                 <div className="relative mb-2">
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
@@ -231,11 +237,18 @@ function AppContent() {
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute left-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50">
-                      <p className="font-bold text-purple-800">Qasim Shah</p>
-                      <p className="text-sm text-gray-600">Student ID: 2364710</p>
-                      <p className="text-sm text-gray-600">dummy@wlv.ac.uk</p>
+                    <div className="absolute left-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50 dark:bg-gray-800 dark:text-white">
+                      <p className="font-bold text-purple-800 dark:text-purple-300">Qasim Shah</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Student ID: 2364710</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">dummy@wlv.ac.uk</p>
                       <hr className="my-2" />
+                      {/* ✅ Dark Mode Toggle */}
+                      <button
+                        onClick={() => setDarkMode(!darkMode)}
+                        className="w-full bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-3 py-1 rounded mb-2"
+                      >
+                        {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+                      </button>
                       <button
                         onClick={handleSignOut}
                         className="w-full bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
@@ -246,7 +259,7 @@ function AppContent() {
                   )}
                 </div>
 
-                {/* ✅ DASHBOARDS */}
+                {/* DASHBOARDS */}
                 <p className="text-xs font-bold text-gray-500 mt-2">DASHBOARDS</p>
                 <NavLink to="/" end onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Home</NavLink>
@@ -257,14 +270,13 @@ function AppContent() {
                 <NavLink to="/grades" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Grades</NavLink>
 
-                {/* ✅ APPS */}
+                {/* APPS */}
                 <p className="text-xs font-bold text-gray-500 mt-2">APPS</p>
                 <NavLink to="/" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Mail</NavLink>
                 <NavLink to="/" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Newsroom</NavLink>
 
-                {/* ✅ Sign Out button in burger menu */}
                 <button
                   onClick={handleSignOut}
                   className="px-3 py-2 rounded text-left text-red-600 hover:bg-gray-200"
@@ -278,7 +290,7 @@ function AppContent() {
       )}
 
       {/* Page Content */}
-      <main className="mx-auto max-w-6xl p-6 mb-16">
+      <main className="mx-auto max-w-6xl p-6 mb-16 bg-white dark:bg-gray-900 dark:text-white min-h-screen">
         <Routes>
           {!isAuthenticated ? (
             <Route path="*" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
@@ -291,36 +303,23 @@ function AppContent() {
             </>
           )}
         </Routes>
-
-        {/* Tailwind Test Card */}
-        {isAuthenticated && (
-          <div className="mt-8 max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg">
-            <h2 className="mb-2 text-2xl font-bold tracking-tight text-purple-700">
-              Tailwind Test Card
-            </h2>
-            <p className="font-normal text-gray-700">
-              If you see a white card with a purple title and hover shadow,
-              Tailwind is working perfectly ✅
-            </p>
-          </div>
-        )}
       </main>
 
-      {/* ✅ Bottom Navigation (Mobile only) */}
+      {/* Bottom Navigation (Mobile only) */}
       {isAuthenticated && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-2 shadow-md z-50">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t flex justify-around items-center py-2 shadow-md z-50">
           <NavLink to="/" end className={({ isActive }) =>
-            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500"}`}>
+            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
             <span className="material-icons">home</span>
             <span className="text-xs">Home</span>
           </NavLink>
           <NavLink to="/" className={({ isActive }) =>
-            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500"}`}>
+            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
             <span className="material-icons">mail</span>
             <span className="text-xs">Mail</span>
           </NavLink>
           <NavLink to="/calendar" className={({ isActive }) =>
-            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500"}`}>
+            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
             <span className="material-icons">event</span>
             <span className="text-xs">Calendar</span>
           </NavLink>
@@ -330,7 +329,6 @@ function AppContent() {
   );
 }
 
-// ✅ Wrap AppContent with Router
 export default function App() {
   return (
     <Router>
