@@ -6,9 +6,20 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 
-// ✅ CORS — allow frontend (local now, later Vercel)
+// ✅ Allow both localhost (development) and Vercel (live)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://mywlv-clone.vercel.app", // ✅ Your live frontend
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST"],
   credentials: true,
 }));
@@ -18,7 +29,7 @@ app.use(express.json());
 // ✅ DB connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT, // <-- added in case Railway port changes
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
@@ -154,7 +165,7 @@ app.get("/calendar", verifyToken, (req, res) => {
   );
 });
 
-// ✅ Health check (good for Railway debug)
+// ✅ Health check
 app.get("/health", (req, res) => res.json({ status: "UP" }));
 
 // ------------------- START SERVER -------------------
