@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { API_BASE } from "../config";
 
 export default function Calendar() {
   const [events, setEvents] = useState([]);
@@ -12,15 +13,13 @@ export default function Calendar() {
   const [monthView, setMonthView] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // ---- helpers (added) ----
   const pad = (n) => String(n).padStart(2, "0");
-  const formatDateLocal = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const formatDateLocal = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   const normalizeDate = (val) => {
     if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
     const d = new Date(val);
     return isNaN(d.getTime()) ? String(val || "") : formatDateLocal(d);
   };
-  // -------------------------
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -28,7 +27,7 @@ export default function Calendar() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const res = await fetch("http://localhost:5000/calendar", {
+        const res = await fetch(`${API_BASE}/calendar`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -37,12 +36,10 @@ export default function Calendar() {
 
         const data = await res.json();
         if (res.ok) {
-          // map SQL row -> UI shape, normalize date locally
           const mapped = (data.calendar || []).map((ev, i) => ({
             ...ev,
-            id: ev.id ?? i + 1, // fallback if backend didn’t include id
+            id: ev.id ?? i + 1,
             date: normalizeDate(ev.date),
-            // ✅ default to false so button shows "Done"
             done: false,
           }));
           setEvents(mapped);
@@ -74,10 +71,7 @@ export default function Calendar() {
       if (filter === "month") {
         const today = new Date();
         const date = new Date(ev.date);
-        return (
-          date.getMonth() === today.getMonth() &&
-          date.getFullYear() === today.getFullYear()
-        );
+        return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
       }
       return true;
     })
@@ -166,7 +160,7 @@ export default function Calendar() {
               <h3 className="text-center font-bold mb-2">{monthName} {year}</h3>
               <div className="grid grid-cols-7 gap-1 text-xs">
                 {Array.from({ length: daysInMonth }, (_, d) => {
-                  const dateStr = formatDateLocal(new Date(year, month, d + 1)); // local-safe
+                  const dateStr = formatDateLocal(new Date(year, month, d + 1));
                   const dayEvents = events.filter(ev => ev.date === dateStr);
                   const isToday = dateStr === todayStr;
 

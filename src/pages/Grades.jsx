@@ -14,31 +14,27 @@ import {
   Line,
 } from "recharts";
 
-// For CSV export
 import { utils, writeFile } from "xlsx";
-// For PDF export
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // ✅ FIXED: correct import
+import autoTable from "jspdf-autotable";
+import { API_BASE } from "../config";
 
 export default function Grades() {
   const [selectedModule, setSelectedModule] = useState(null);
   const [selectedComment, setSelectedComment] = useState(null);
 
-  // Sorting + Filtering
   const [sortOrder, setSortOrder] = useState(null);
   const [filter, setFilter] = useState("all");
 
-  // 🔹 Grades data from backend only
   const [gradesData, setGradesData] = useState([]);
 
-  // 🔹 Fetch grades on load
   useEffect(() => {
     const fetchGrades = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const res = await fetch("http://localhost:5000/grades", {
+        const res = await fetch(`${API_BASE}/grades`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -62,21 +58,17 @@ export default function Grades() {
     fetchGrades();
   }, []);
 
-  // Calculations
   const average =
     gradesData.reduce((acc, g) => acc + g.grade, 0) /
     (gradesData.length || 1);
 
-  // Sorting logic
   let displayedGrades = [...gradesData];
   if (sortOrder === "asc") displayedGrades.sort((a, b) => a.grade - b.grade);
   if (sortOrder === "desc") displayedGrades.sort((a, b) => b.grade - a.grade);
 
-  // Filtering logic
   if (filter === "passed") displayedGrades = displayedGrades.filter((g) => g.grade >= 50);
   if (filter === "failed") displayedGrades = displayedGrades.filter((g) => g.grade < 50);
 
-  // Charts data
   const chartData = gradesData.map((g, idx) => ({
     name: g.module,
     grade: g.grade,
@@ -88,7 +80,6 @@ export default function Grades() {
   ];
   const COLORS = ["#22c55e", "#ef4444"];
 
-  // Highest/Lowest
   const highest = gradesData.reduce(
     (a, b) => (a.grade > b.grade ? a : b),
     { grade: 0, module: "N/A" }
@@ -98,10 +89,8 @@ export default function Grades() {
     { grade: 100, module: "N/A" }
   );
 
-  // Progress tracker
   const progress = Math.round((average / 100) * 100);
 
-  // Classification predictor (UK system)
   let classification = "Unclassified";
   if (average >= 70) classification = "First Class";
   else if (average >= 60) classification = "Upper Second (2:1)";
@@ -109,7 +98,6 @@ export default function Grades() {
   else if (average >= 40) classification = "Third Class";
   else classification = "Fail";
 
-  // Export to CSV
   const exportCSV = () => {
     const ws = utils.json_to_sheet(gradesData);
     const wb = utils.book_new();
@@ -117,7 +105,6 @@ export default function Grades() {
     writeFile(wb, "grades.csv");
   };
 
-  // ✅ Export to PDF (fixed)
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.text("Grades Report", 14, 16);
@@ -126,7 +113,7 @@ export default function Grades() {
       g.assignment,
       g.grade + "%",
     ]);
-    autoTable(doc, {       // ✅ FIXED: use autoTable function
+    autoTable(doc, {
       head: [["Module", "Assignment", "Grade"]],
       body: tableData,
       startY: 20,
@@ -140,7 +127,6 @@ export default function Grades() {
         <h2 className="text-2xl font-bold text-purple-700">Grades</h2>
       </div>
 
-      {/* Sorting & Filtering Controls */}
       <div className="flex flex-wrap gap-3 mb-4">
         <button onClick={() => setSortOrder("asc")} className="px-3 py-1 bg-gray-200 rounded">Sort Asc</button>
         <button onClick={() => setSortOrder("desc")} className="px-3 py-1 bg-gray-200 rounded">Sort Desc</button>
@@ -152,13 +138,11 @@ export default function Grades() {
         </select>
       </div>
 
-      {/* Export */}
       <div className="flex flex-wrap gap-3 mb-6">
         <button onClick={exportCSV} className="px-3 py-1 bg-green-500 text-white rounded">Export CSV</button>
         <button onClick={exportPDF} className="px-3 py-1 bg-red-500 text-white rounded">Export PDF</button>
       </div>
 
-      {/* Table (with badges & mobile cards) */}
       <div className="overflow-x-auto hidden md:block">
         <table className="w-full border-collapse shadow-md rounded-lg">
           <thead>
@@ -198,7 +182,6 @@ export default function Grades() {
         </table>
       </div>
 
-      {/* Mobile Cards */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {displayedGrades.map((g, idx) => (
           <div key={idx} className="p-4 bg-white rounded shadow">
@@ -221,7 +204,6 @@ export default function Grades() {
         ))}
       </div>
 
-      {/* Summary */}
       <div className="mt-6 p-4 bg-purple-100 rounded-lg shadow">
         <p className="font-bold">Average: <span className="font-normal">{average.toFixed(2)}%</span></p>
         <p className="mt-2"><strong>Best Module:</strong> {highest.module} ({highest.grade}%)</p>
@@ -236,7 +218,6 @@ export default function Grades() {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-bold mb-2">Grades per Module</h2>
@@ -280,7 +261,6 @@ export default function Grades() {
         </div>
       </div>
 
-      {/* Popup Card */}
       {selectedModule && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">

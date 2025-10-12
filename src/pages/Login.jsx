@@ -1,6 +1,7 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../config";
 
 const Login = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState("");
@@ -12,8 +13,7 @@ const Login = ({ setIsAuthenticated }) => {
     e.preventDefault();
 
     try {
-      // Call backend login API
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -22,12 +22,10 @@ const Login = ({ setIsAuthenticated }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // ✅ Save token + persist login
         localStorage.setItem("token", data.token);
         localStorage.setItem("isAuthenticated", "true");
-
-        setIsAuthenticated(true); // update React state
-        navigate("/"); // redirect to homepage
+        setIsAuthenticated(true);
+        navigate("/");
       } else {
         setError(data.error || "Invalid email or password ❌");
       }

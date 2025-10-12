@@ -5,17 +5,16 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-// ✅ banner images
 import banner1 from "../assets/banner1.jpg";
 import banner2 from "../assets/banner2.jpg";
 import banner3 from "../assets/banner3.jpg";
 import banner4 from "../assets/banner4.jpg";
+import { API_BASE } from "../config";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// ✅ Highlight helper
 function applyHighlight(text, query) {
-  if (!query || query.length < 4) return text; // only highlight if 4+ chars
+  if (!query || query.length < 4) return text;
   const regex = new RegExp(`(${query})`, "gi");
   return text.split(regex).map((part, i) =>
     regex.test(part) ? (
@@ -36,26 +35,23 @@ const Home = ({ highlight }) => {
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [mailRead, setMailRead] = useState(false);
 
-  // 🔗 NEW: State for DB-driven data
   const [modules, setModules] = useState([]);
   const [events, setEvents] = useState([]);
 
   const navigate = useNavigate();
 
-  // 🔗 Fetch timetable + modules from backend
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    // fetch timetable
-    fetch("http://localhost:5000/timetable", {
+    fetch(`${API_BASE}/timetable`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.timetable) {
           setEvents(data.timetable);
-          setModules([...new Set(data.timetable.map((e) => e.module))]); // unique module list
+          setModules([...new Set(data.timetable.map((e) => e.module))]);
         }
       })
       .catch((err) => console.error("Error fetching timetable:", err));
@@ -71,7 +67,6 @@ const Home = ({ highlight }) => {
     setCheckInCode("");
   };
 
-  // --- timetable tile logic ---
   const now = new Date();
   const todayName = now.toLocaleDateString("en-GB", { weekday: "long" });
   const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -102,7 +97,6 @@ const Home = ({ highlight }) => {
     }
   }
 
-  // --- NEW: Next Event (for homepage card) ---
   let nextEvent = null;
   if (inProgress) {
     nextEvent = inProgress;
@@ -114,7 +108,6 @@ const Home = ({ highlight }) => {
 
   return (
     <div className="p-4 space-y-6">
-      {/* ✅ Swiper with aspect ratio for consistent banners */}
       <Swiper
         modules={[Autoplay, Pagination]}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
@@ -146,7 +139,6 @@ const Home = ({ highlight }) => {
         </SwiperSlide>
       </Swiper>
 
-      {/* --- tiles --- */}
       <div className="grid grid-cols-2 gap-4">
         <div
           onClick={() => navigate("/timetable")}
@@ -195,7 +187,6 @@ const Home = ({ highlight }) => {
         </div>
       </div>
 
-      {/* ✅ NEW: Next Event Widget */}
       <div className="bg-white rounded-2xl p-4 shadow-md">
         <h2 className="text-lg font-bold text-purple-700">Next Event</h2>
         {nextEvent ? (
@@ -220,8 +211,6 @@ const Home = ({ highlight }) => {
         </p>
       </div>
 
-      {/* --- modals --- */}
-      {/* (rest of your code stays the same) */}
       {isCheckInOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-xl p-6 shadow-lg w-80">

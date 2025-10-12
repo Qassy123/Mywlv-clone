@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { API_BASE } from "../config";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const toMins = (hhmm) => {
@@ -6,7 +7,6 @@ const toMins = (hhmm) => {
   return h * 60 + m;
 };
 
-// --- ICS helpers (for export) ---
 const pad = (n) => String(n).padStart(2, "0");
 const formatICSLocal = (date) => {
   const y = date.getFullYear();
@@ -19,35 +19,34 @@ const formatICSLocal = (date) => {
 };
 const startOfWeekMonday = (ref = new Date()) => {
   const d = new Date(ref);
-  const day = d.getDay(); // 0=Sun,...,6=Sat
-  const diff = (day === 0 ? -6 : 1 - day); // move to Monday
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
   d.setDate(d.getDate() + diff);
   d.setHours(0,0,0,0);
   return d;
 };
 
-// 🔹 Fixed module color handling
 const moduleColors = {
-  "Human Computer Interaction": "#8b5cf6", // purple
-  "Cyber Security": "#22c55e",             // green
-  "Software Engineering": "#f59e0b",       // amber
+  "Human Computer Interaction": "#8b5cf6",
+  "Cyber Security": "#22c55e",
+  "Software Engineering": "#f59e0b",
 };
-// fallback palette for everything else
+
 const colorPalette = [
-  "#f87171", // red
-  "#60a5fa", // blue
-  "#34d399", // emerald
-  "#fbbf24", // yellow
-  "#a78bfa", // violet
-  "#fb923c", // orange
-  "#2dd4bf", // teal
-  "#f472b6", // pink
+  "#f87171",
+  "#60a5fa",
+  "#34d399",
+  "#fbbf24",
+  "#a78bfa",
+  "#fb923c",
+  "#2dd4bf",
+  "#f472b6",
 ];
 
 export default function Timetable() {
   const [showTodayOnly, setShowTodayOnly] = useState(false);
   const [selectedDay, setSelectedDay] = useState("All Week");
-  const [events, setEvents] = useState([]);   // 🔹 fetched data
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -55,12 +54,11 @@ export default function Timetable() {
   const todayName = now.toLocaleDateString("en-GB", { weekday: "long" });
   const nowMins = now.getHours() * 60 + now.getMinutes();
 
-  // 🔹 Fetch timetable from backend
   useEffect(() => {
     const fetchTimetable = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/timetable", {
+        const res = await fetch(`${API_BASE}/timetable`, {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
@@ -79,13 +77,11 @@ export default function Timetable() {
     fetchTimetable();
   }, []);
 
-  // Enrich: start/end minutes + day index + color
   const enriched = useMemo(() => {
     const colorMap = { ...moduleColors };
     let colorIndex = 0;
     return events.map((item) => {
       const [start, end] = item.time.split(" - ");
-      // assign color: if not predefined, assign from palette
       if (!colorMap[item.module]) {
         colorMap[item.module] = colorPalette[colorIndex % colorPalette.length];
         colorIndex++;
@@ -100,14 +96,12 @@ export default function Timetable() {
     });
   }, [events]);
 
-  // Sort by day -> start time
   const sorted = useMemo(() => {
     const copy = [...enriched];
     copy.sort((a, b) => (a.dayIdx - b.dayIdx) || (a.startMins - b.startMins));
     return copy;
   }, [enriched]);
 
-  // Next class = first future (today first, then later days)
   const nextClass = useMemo(() => {
     const todayFuture = sorted.filter(c => c.day === todayName && c.startMins > nowMins);
     if (todayFuture.length) return todayFuture[0];
@@ -115,7 +109,6 @@ export default function Timetable() {
     return later[0] || null;
   }, [sorted, todayName, nowMins]);
 
-  // Apply filters
   let view = sorted;
   if (showTodayOnly) view = view.filter(v => v.day === todayName);
   if (selectedDay !== "All Week") view = view.filter(v => v.day === selectedDay);
@@ -124,18 +117,16 @@ export default function Timetable() {
   const isInProgress = (cls) =>
     cls.day === todayName && nowMins >= cls.startMins && nowMins <= cls.endMins;
 
-  // 👉 Group by day (for desktop table rowSpan) + detect conflicts
   const groups = useMemo(() => {
     const map = new Map();
     for (const cls of view) {
       if (!map.has(cls.day)) map.set(cls.day, []);
-      map.get(cls.day).push({ ...cls }); // clone
+      map.get(cls.day).push({ ...cls });
     }
     const ordered = DAYS
       .filter(day => map.has(day))
       .map(day => {
         const classes = map.get(day).sort((a,b) => a.startMins - b.startMins);
-        // conflict detection: mark any overlap within the same day
         for (let i = 0; i < classes.length; i++) {
           for (let j = i + 1; j < classes.length; j++) {
             const a = classes[i], b = classes[j];
@@ -151,10 +142,9 @@ export default function Timetable() {
     return ordered;
   }, [view]);
 
-  // --- Export current view to .ics (this week) ---
   const exportICS = () => {
     if (empty) return;
-    const weekStart = startOfWeekMonday(now); // Monday of current week
+    const weekStart = startOfWeekMonday(now);
     const items = groups.flatMap(g => g.classes.map(c => ({ ...c, day: g.day })));
     const lines = [
       "BEGIN:VCALENDAR",
@@ -191,7 +181,6 @@ export default function Timetable() {
     URL.revokeObjectURL(url);
   };
 
-  // helpers for ICS
   function escapeICS(text) {
     return String(text).replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
   }
@@ -202,12 +191,9 @@ export default function Timetable() {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-3">Weekly Timetable</h2>
-
-      {/* Loading / Error */}
       {loading && <div>⏳ Loading timetable...</div>}
       {error && <div className="text-red-600">{error}</div>}
 
-      {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center mb-4">
         <button
           onClick={() => setShowTodayOnly(!showTodayOnly)}
@@ -225,38 +211,32 @@ export default function Timetable() {
           {DAYS.map(d => <option key={d}>{d}</option>)}
         </select>
 
-        {/* Export buttons */}
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={exportICS}
             className="px-3 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
-            title="Download current view as a calendar (.ics) file"
           >
             Export .ics
           </button>
           <button
             onClick={() => window.print()}
             className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-800"
-            title="Print or Save as PDF from your browser"
           >
             Print / PDF
           </button>
         </div>
       </div>
 
-      {/* Next class banner */}
       {nextClass && !showTodayOnly && selectedDay === "All Week" && (
         <div className="mb-5 rounded-md bg-blue-600 text-white px-4 py-3 font-semibold">
           📌 Next Class: {nextClass.module} — {nextClass.day} {nextClass.time} in {nextClass.room}
         </div>
       )}
 
-      {/* Empty state */}
       {empty && !loading && !error && (
         <div className="text-gray-600">No classes in this view 🎉</div>
       )}
 
-      {/* Mobile: cards */}
       {!empty && (
         <div className="grid gap-3 md:hidden">
           {view.map((cls, i) => (
@@ -284,7 +264,6 @@ export default function Timetable() {
         </div>
       )}
 
-      {/* Desktop: grouped table */}
       {!empty && (
         <table className="hidden md:table w-full border-collapse mt-2">
           <thead>
