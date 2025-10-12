@@ -150,7 +150,7 @@ const Home = ({ highlight }) => {
       <div className="grid grid-cols-2 gap-4">
         <div
           onClick={() => navigate("/timetable")}
-          className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+          className="bg-blue-100 rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Timetable</h2>
           <p className="text-gray-600 mt-2">{tileText}</p>
@@ -161,7 +161,7 @@ const Home = ({ highlight }) => {
             setIsMailOpen(true);
             setMailRead(true);
           }}
-          className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+          className="bg-green-100 rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Mail</h2>
           {!mailRead ? (
@@ -177,7 +177,7 @@ const Home = ({ highlight }) => {
 
         <div
           onClick={() => setIsCoursesOpen(true)}
-          className="bg-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+          className="bg-yellow-100 rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition"
         >
           <h2 className="text-lg font-bold text-purple-700">Courses</h2>
           <p className="text-3xl font-semibold mt-2">{modules.length}</p>
@@ -221,6 +221,7 @@ const Home = ({ highlight }) => {
       </div>
 
       {/* --- modals --- */}
+      {/* (rest of your code stays the same) */}
       {isCheckInOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-xl p-6 shadow-lg w-80">
