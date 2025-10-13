@@ -107,7 +107,7 @@ function AppContent() {
   };
 
   return (
-    <>
+    <motion.div key={darkMode ? "dark" : "light"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
       <header className="bg-purple-800 text-white relative dark:bg-gray-900">
         <div className="mx-auto max-w-6xl flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
@@ -309,7 +309,7 @@ function AppContent() {
           </NavLink>
         </nav>
       )}
-    </>
+    </motion.div>
   );
 }
 
