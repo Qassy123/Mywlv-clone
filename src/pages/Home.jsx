@@ -36,7 +36,24 @@ const Home = ({ highlight }) => {
   const [mailRead, setMailRead] = useState(false);
   const [modules, setModules] = useState([]);
   const [events, setEvents] = useState([]);
+  const [userName, setUserName] = useState("Student");
+  const [greeting, setGreeting] = useState("Welcome back");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1] || ""));
+        const nameFromEmail = (payload?.email || "").split("@")[0] || "Student";
+        setUserName(nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1));
+      } catch {}
+    }
+    const h = new Date().getHours();
+    if (h < 12) setGreeting("Good morning");
+    else if (h < 18) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -105,6 +122,21 @@ const Home = ({ highlight }) => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="p-4 space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm opacity-90">{greeting}</div>
+            <div className="text-xl sm:text-2xl font-semibold">Welcome back, {userName} 👋</div>
+          </div>
+          <div className="hidden sm:block text-3xl">🎓</div>
+        </div>
+      </motion.div>
+
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
         <Swiper modules={[Autoplay, Pagination]} autoplay={{ delay: 5000, disableOnInteraction: false }} pagination={{ clickable: true }} loop={true} spaceBetween={20} slidesPerView={1} className="rounded-2xl shadow-md w-full">
           {[banner1, banner2, banner3, banner4].map((b, i) => (
