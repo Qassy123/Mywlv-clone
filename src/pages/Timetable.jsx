@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { API_BASE } from "../config";
+import { motion } from "framer-motion";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const toMins = (hhmm) => {
@@ -68,7 +69,6 @@ export default function Timetable() {
         const data = await res.json();
         setEvents(data.timetable || []);
       } catch (err) {
-        console.error(err);
         setError("⚠️ Could not load timetable");
       } finally {
         setLoading(false);
@@ -189,61 +189,41 @@ export default function Timetable() {
   }
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-3">Weekly Timetable</h2>
-      {loading && <div>⏳ Loading timetable...</div>}
-      {error && <div className="text-red-600">{error}</div>}
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-6">
+      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-2xl font-bold mb-3">
+        Weekly Timetable
+      </motion.h2>
+
+      {nextClass && !showTodayOnly && selectedDay === "All Week" && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-5 rounded-md bg-blue-600 text-white px-4 py-3 font-semibold">
+          📌 Next Class: {nextClass.module} — {nextClass.day} {nextClass.time} in {nextClass.room}
+        </motion.div>
+      )}
 
       <div className="flex flex-wrap gap-3 items-center mb-4">
-        <button
-          onClick={() => setShowTodayOnly(!showTodayOnly)}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
+        <button onClick={() => setShowTodayOnly(!showTodayOnly)} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           {showTodayOnly ? "Show Full Week" : "Show Today’s Classes"}
         </button>
 
-        <select
-          value={selectedDay}
-          onChange={(e) => setSelectedDay(e.target.value)}
-          className="px-3 py-2 border rounded"
-        >
+        <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} className="px-3 py-2 border rounded">
           <option>All Week</option>
           {DAYS.map(d => <option key={d}>{d}</option>)}
         </select>
 
         <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={exportICS}
-            className="px-3 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
-          >
+          <button onClick={exportICS} className="px-3 py-2 bg-purple-700 text-white rounded hover:bg-purple-800">
             Export .ics
           </button>
-          <button
-            onClick={() => window.print()}
-            className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-800"
-          >
+          <button onClick={() => window.print()} className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">
             Print / PDF
           </button>
         </div>
       </div>
 
-      {nextClass && !showTodayOnly && selectedDay === "All Week" && (
-        <div className="mb-5 rounded-md bg-blue-600 text-white px-4 py-3 font-semibold">
-          📌 Next Class: {nextClass.module} — {nextClass.day} {nextClass.time} in {nextClass.room}
-        </div>
-      )}
-
-      {empty && !loading && !error && (
-        <div className="text-gray-600">No classes in this view 🎉</div>
-      )}
-
       {!empty && (
-        <div className="grid gap-3 md:hidden">
+        <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }} className="grid gap-3 md:hidden">
           {view.map((cls, i) => (
-            <div
-              key={i}
-              className={`rounded-lg border shadow-sm overflow-hidden ${isInProgress(cls) ? "ring-2 ring-green-500" : ""}`}
-            >
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-lg border shadow-sm overflow-hidden ${isInProgress(cls) ? "ring-2 ring-green-500 animate-pulse" : ""}`}>
               <div className="p-3 font-medium flex justify-between items-center" style={{ backgroundColor: cls.color }}>
                 <span>{cls.module}</span>
                 <div className="flex items-center gap-2">
@@ -259,13 +239,13 @@ export default function Timetable() {
                   <div className="mt-1 text-green-700">✅ Today</div>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {!empty && (
-        <table className="hidden md:table w-full border-collapse mt-2">
+        <motion.table initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="hidden md:table w-full border-collapse mt-2">
           <thead>
             <tr className="bg-gray-100 text-left">
               <th className="border p-2 w-40">Day</th>
@@ -283,11 +263,7 @@ export default function Timetable() {
                 const cellsTopBorder = idx > 0 ? "border-t-2 border-gray-300" : "";
 
                 return (
-                  <tr
-                    key={`${day}-${idx}`}
-                    className={`${inProg ? "ring-2 ring-green-500" : ""}`}
-                    style={{ backgroundColor: cls.color }}
-                  >
+                  <motion.tr key={`${day}-${idx}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }} className={`${inProg ? "ring-2 ring-green-500 animate-pulse" : ""}`} style={{ backgroundColor: cls.color }}>
                     {idx === 0 && (
                       <td className="border p-2 font-semibold align-top" rowSpan={classes.length}>
                         <div className="flex items-center gap-2">
@@ -312,13 +288,13 @@ export default function Timetable() {
                     <td className={`border p-2 ${cellsTopBorder}`}>
                       {inProg ? "⏳ In Progress" : isToday ? "✅ Today" : "—"}
                     </td>
-                  </tr>
+                  </motion.tr>
                 );
               });
             })}
           </tbody>
-        </table>
+        </motion.table>
       )}
-    </div>
+    </motion.div>
   );
 }
