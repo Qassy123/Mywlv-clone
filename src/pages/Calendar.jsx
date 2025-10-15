@@ -156,7 +156,7 @@ export default function Calendar() {
           const daysInMonth = new Date(year, month + 1, 0).getDate();
 
           return (
-            <div key={idx} className="border rounded p-2">
+            <div key={idx} className="border rounded p-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
               <h3 className="text-center font-bold mb-2">{monthName} {year}</h3>
               <div className="grid grid-cols-7 gap-1 text-xs">
                 {Array.from({ length: daysInMonth }, (_, d) => {
@@ -165,8 +165,8 @@ export default function Calendar() {
                   const isToday = dateStr === todayStr;
 
                   return (
-                    <div key={dateStr} className={`border min-h-[80px] p-1 ${isToday ? "ring-2 ring-purple-500" : ""}`}>
-                      <p className="text-gray-500">{d + 1}</p>
+                    <div key={dateStr} className={`border min-h-[80px] p-1 bg-white dark:bg-gray-700 ${isToday ? "ring-2 ring-purple-500" : ""}`}>
+                      <p className="text-gray-600 dark:text-gray-300">{d + 1}</p>
                       {dayEvents.map((ev, i) => (
                         <div
                           key={ev.id ?? `${ev.title}-${ev.date}-${i}`}
@@ -174,8 +174,8 @@ export default function Calendar() {
                           onClick={() => setSelectedEvent(ev)}
                           className={`cursor-pointer text-[9px] rounded px-1 mt-1 w-full truncate block ${
                             ev.done
-                              ? "bg-gray-300 line-through"
-                              : ["bg-purple-200", "bg-blue-200", "bg-green-200", "bg-yellow-200", "bg-pink-200"][(Number(ev.id) || i) % 5]
+                              ? "bg-gray-300 dark:bg-gray-600 line-through"
+                              : "bg-purple-200 dark:bg-purple-900"
                           }`}
                         >
                           {ev.title}
@@ -193,10 +193,10 @@ export default function Calendar() {
   };
 
   return (
-    <div>
+    <div className="text-gray-700 dark:text-gray-300">
       <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
 
-      <div className="bg-purple-100 p-3 rounded mb-4">
+      <div className="bg-purple-100 dark:bg-gray-800 p-3 rounded mb-4">
         <h3 className="font-bold">
           Today is {new Date().toLocaleDateString("en-UK", { weekday: "long", day: "numeric", month: "long" })}
         </h3>
@@ -204,7 +204,7 @@ export default function Calendar() {
       </div>
 
       {nextDeadlines.length > 0 && (
-        <div className="bg-yellow-100 p-3 rounded mb-4">
+        <div className="bg-yellow-100 dark:bg-gray-800 p-3 rounded mb-4">
           <h3 className="font-bold">Next Deadlines</h3>
           <ul className="list-disc ml-5">
             {nextDeadlines.map((ev, i) => (
@@ -220,12 +220,12 @@ export default function Calendar() {
         <input
           type="text"
           placeholder="Search events..."
-          className="flex-1 border rounded p-2"
+          className="flex-1 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
-          className="border rounded p-2"
+          className="border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
@@ -233,7 +233,9 @@ export default function Calendar() {
           <option value="7days">Next 7 Days</option>
           <option value="month">This Month</option>
         </select>
-        <button onClick={() => setShowForm(!showForm)} className="bg-purple-700 text-white px-3 rounded hover:bg-purple-800">+ Add Event</button>
+        <button onClick={() => setShowForm(!showForm)} className="bg-purple-700 text-white px-3 rounded hover:bg-purple-800">
+          + Add Event
+        </button>
         <button onClick={exportICS} className="bg-green-600 text-white px-3 rounded hover:bg-green-700">Export .ICS</button>
         <button onClick={exportCSV} className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700">Export CSV</button>
         <button onClick={exportPDF} className="bg-gray-700 text-white px-3 rounded hover:bg-gray-800">Export PDF</button>
@@ -243,23 +245,23 @@ export default function Calendar() {
       </div>
 
       {showForm && (
-        <form onSubmit={addEvent} className="mb-6 bg-gray-100 p-4 rounded">
+        <form onSubmit={addEvent} className="mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded">
           <input
             type="text"
             placeholder="Event title"
-            className="block w-full mb-2 border rounded p-2"
+            className="block w-full mb-2 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={newEvent.title}
             onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
           />
           <input
             type="date"
-            className="block w-full mb-2 border rounded p-2"
+            className="block w-full mb-2 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={newEvent.date}
             onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
           />
           <textarea
             placeholder="Description (optional)"
-            className="block w-full mb-2 border rounded p-2"
+            className="block w-full mb-2 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={newEvent.description}
             onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
           />
@@ -270,17 +272,17 @@ export default function Calendar() {
       {monthView ? renderCalendar() : (
         <div className="space-y-4">
           {filteredEvents.length === 0 ? (
-            <p className="text-gray-500">No events found.</p>
+            <p className="text-gray-500 dark:text-gray-400">No events found.</p>
           ) : (
             filteredEvents.map((ev, i) => (
               <div
                 key={ev.id ?? `${ev.title}-${ev.date}-${i}`}
                 className={`p-4 rounded shadow flex justify-between items-start ${
-                  ["bg-purple-100", "bg-blue-100", "bg-green-100", "bg-yellow-100", "bg-pink-100"][i % 5]
+                  ["bg-purple-100 dark:bg-gray-800", "bg-blue-100 dark:bg-gray-800", "bg-green-100 dark:bg-gray-800", "bg-yellow-100 dark:bg-gray-800", "bg-pink-100 dark:bg-gray-800"][i % 5]
                 } ${ev.done ? "opacity-60 line-through" : ""}`}
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     {new Date(ev.date).toLocaleDateString("en-UK", {
                       weekday: "long",
                       day: "numeric",
@@ -294,7 +296,7 @@ export default function Calendar() {
                       <span className="ml-2 text-red-600 font-semibold">PRIORITY ⚠️</span>
                     )}
                   </h3>
-                  <p className="text-gray-700">{ev.description}</p>
+                  <p className="text-gray-700 dark:text-gray-300">{ev.description}</p>
                   {new Date(ev.date).toDateString() === new Date(Date.now() + 86400000).toDateString() && (
                     <p className="text-orange-600 font-semibold">Reminder: This is tomorrow!</p>
                   )}
@@ -311,12 +313,10 @@ export default function Calendar() {
       {selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div
-            className={`p-6 rounded shadow-lg w-full max-w-lg ${
-              ["bg-purple-100", "bg-blue-100", "bg-green-100", "bg-yellow-100", "bg-pink-100"][(Number(selectedEvent?.id) || 0) % 5]
-            }`}
+            className={`p-6 rounded shadow-lg w-full max-w-lg bg-white dark:bg-gray-800`}
           >
             <h2 className="text-2xl font-bold mb-2">{selectedEvent.title}</h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 dark:text-gray-300 mb-2">
               {new Date(selectedEvent.date).toLocaleDateString("en-UK", {
                 weekday: "long",
                 day: "numeric",
