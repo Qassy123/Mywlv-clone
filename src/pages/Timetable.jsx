@@ -189,8 +189,8 @@ export default function Timetable() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-6">
-      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-2xl font-bold mb-3">
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-6 bg-white dark:bg-gray-900 dark:text-white rounded-2xl shadow-md">
+      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-2xl font-bold mb-3 text-purple-700 dark:text-purple-300">
         Weekly Timetable
       </motion.h2>
 
@@ -205,7 +205,7 @@ export default function Timetable() {
           {showTodayOnly ? "Show Full Week" : "Show Today’s Classes"}
         </button>
 
-        <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} className="px-3 py-2 border rounded">
+        <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} className="px-3 py-2 border dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded">
           <option>All Week</option>
           {DAYS.map(d => <option key={d}>{d}</option>)}
         </select>
@@ -223,7 +223,7 @@ export default function Timetable() {
       {!empty && (
         <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }} className="grid gap-3 md:hidden">
           {view.map((cls, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-lg border shadow-sm overflow-hidden ${isInProgress(cls) ? "ring-2 ring-green-500 animate-pulse" : ""}`}>
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-lg border dark:border-gray-700 shadow-sm overflow-hidden bg-gray-50 dark:bg-gray-800 ${isInProgress(cls) ? "ring-2 ring-green-500 animate-pulse" : ""}`}>
               <div className="p-3 font-medium flex justify-between items-center" style={{ backgroundColor: cls.color }}>
                 <span>{cls.module}</span>
                 <div className="flex items-center gap-2">
@@ -231,12 +231,12 @@ export default function Timetable() {
                   {isInProgress(cls) && <span className="text-sm font-semibold">⏳ In Progress</span>}
                 </div>
               </div>
-              <div className="p-3 text-sm text-gray-700">
+              <div className="p-3 text-sm text-gray-700 dark:text-gray-300">
                 <div><span className="font-medium">Day:</span> {cls.day}</div>
                 <div><span className="font-medium">Time:</span> {cls.time}</div>
                 <div><span className="font-medium">Room:</span> {cls.room}</div>
                 {cls.day === todayName && !isInProgress(cls) && (
-                  <div className="mt-1 text-green-700">✅ Today</div>
+                  <div className="mt-1 text-green-700 dark:text-green-400">✅ Today</div>
                 )}
               </div>
             </motion.div>
@@ -245,27 +245,27 @@ export default function Timetable() {
       )}
 
       {!empty && (
-        <motion.table initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="hidden md:table w-full border-collapse mt-2">
+        <motion.table initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="hidden md:table w-full border-collapse mt-2 text-gray-800 dark:text-gray-200">
           <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="border p-2 w-40">Day</th>
-              <th className="border p-2">Module</th>
-              <th className="border p-2">Time</th>
-              <th className="border p-2">Room</th>
-              <th className="border p-2">Status</th>
+            <tr className="bg-gray-100 dark:bg-gray-800 text-left">
+              <th className="border dark:border-gray-700 p-2 w-40">Day</th>
+              <th className="border dark:border-gray-700 p-2">Module</th>
+              <th className="border dark:border-gray-700 p-2">Time</th>
+              <th className="border dark:border-gray-700 p-2">Room</th>
+              <th className="border dark:border-gray-700 p-2">Status</th>
             </tr>
           </thead>
           <tbody>
-            {groups.map(({ day, classes }) => {
-              return classes.map((cls, idx) => {
+            {groups.map(({ day, classes }) =>
+              classes.map((cls, idx) => {
                 const inProg = isInProgress(cls);
                 const isToday = cls.day === todayName;
-                const cellsTopBorder = idx > 0 ? "border-t-2 border-gray-300" : "";
+                const cellsTopBorder = idx > 0 ? "border-t-2 border-gray-300 dark:border-gray-700" : "";
 
                 return (
-                  <motion.tr key={`${day}-${idx}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }} className={`${inProg ? "ring-2 ring-green-500 animate-pulse" : ""}`} style={{ backgroundColor: cls.color }}>
+                  <motion.tr key={`${day}-${idx}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }} className={`${inProg ? "ring-2 ring-green-500 animate-pulse" : ""} dark:bg-gray-900`} style={{ backgroundColor: cls.color }}>
                     {idx === 0 && (
-                      <td className="border p-2 font-semibold align-top" rowSpan={classes.length}>
+                      <td className="border dark:border-gray-700 p-2 font-semibold align-top" rowSpan={classes.length}>
                         <div className="flex items-center gap-2">
                           <span>{day}</span>
                           <span className="inline-flex items-center rounded-full bg-purple-700 text-white text-xs px-2 py-0.5">
@@ -275,7 +275,7 @@ export default function Timetable() {
                       </td>
                     )}
 
-                    <td className={`border p-2 ${cellsTopBorder}`}>
+                    <td className={`border dark:border-gray-700 p-2 ${cellsTopBorder}`}>
                       <div className="flex items-center gap-2">
                         <span>{cls.module}</span>
                         {cls.conflict && (
@@ -283,15 +283,15 @@ export default function Timetable() {
                         )}
                       </div>
                     </td>
-                    <td className={`border p-2 ${cellsTopBorder}`}>{cls.time}</td>
-                    <td className={`border p-2 ${cellsTopBorder}`}>{cls.room}</td>
-                    <td className={`border p-2 ${cellsTopBorder}`}>
+                    <td className={`border dark:border-gray-700 p-2 ${cellsTopBorder}`}>{cls.time}</td>
+                    <td className={`border dark:border-gray-700 p-2 ${cellsTopBorder}`}>{cls.room}</td>
+                    <td className={`border dark:border-gray-700 p-2 ${cellsTopBorder}`}>
                       {inProg ? "⏳ In Progress" : isToday ? "✅ Today" : "—"}
                     </td>
                   </motion.tr>
                 );
-              });
-            })}
+              })
+            )}
           </tbody>
         </motion.table>
       )}
