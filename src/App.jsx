@@ -80,6 +80,16 @@ function AppContent() {
       navigate("/calendar");
     }
     else if (
+      value.startsWith("abo") || value.includes("about") || value.includes("university") || value.includes("info") || value.includes("wlv")
+    ) {
+      navigate("/about");
+    }
+    else if (
+      value.includes("privacy") || value.includes("policy") || value.includes("data") || value.includes("gdpr")
+    ) {
+      navigate("/privacy");
+    }
+    else if (
       value.startsWith("ho") || value.startsWith("hom") ||
       value.startsWith("dash") || value.includes("main") ||
       value.includes("welcome") || value.includes("start")
