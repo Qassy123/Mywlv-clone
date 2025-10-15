@@ -112,6 +112,19 @@ app.get("/calendar", verifyToken, (req, res) => {
 
 app.get("/health", (req, res) => res.json({ status: "UP" }));
 
+
+app.get("/staff", (req, res) => {
+  const query = "SELECT * FROM staff";
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching staff:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(results);
+  });
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
