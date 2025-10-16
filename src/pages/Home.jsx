@@ -10,9 +10,8 @@ import banner2 from "../assets/banner2.jpg";
 import banner3 from "../assets/banner3.jpg";
 import banner4 from "../assets/banner4.jpg";
 import { API_BASE } from "../config";
-
-// ✅ STAFF FEATURE ADDED - IMPORT MODAL
 import StaffModal from "../components/StaffModal";
+import SupportLinksModal from "../components/SupportLinksModal";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -41,10 +40,9 @@ const Home = ({ highlight }) => {
   const [events, setEvents] = useState([]);
   const [userName, setUserName] = useState("Student");
   const [greeting, setGreeting] = useState("Welcome back");
-  const navigate = useNavigate();
-
-  // ✅ STAFF FEATURE ADDED - NEW STATE
   const [isStaffOpen, setIsStaffOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -161,8 +159,8 @@ const Home = ({ highlight }) => {
           { color: "bg-green-100", title: "Mail", text: mailRead ? "All up to date" : "Urgent • Unread", badge: !mailRead, onClick: () => { setIsMailOpen(true); setMailRead(true); } },
           { color: "bg-yellow-100", title: "Courses", text: `${modules.length}`, onClick: () => setIsCoursesOpen(true) },
           { color: "bg-purple-100", title: "Student Check-In", text: checkInSuccess ? "✅ Checked in" : "Tap to enter your lecture code", onClick: () => setIsCheckInOpen(true) },
-          // ✅ STAFF FEATURE ADDED - NEW TILE
           { color: "bg-red-100", title: "Staff", text: "View lecturers", onClick: () => setIsStaffOpen(true) },
+          { color: "bg-orange-100", title: "Support & Links", text: "Helpful resources", onClick: () => setIsSupportOpen(true) },
         ].map((tile, i) => (
           <motion.div key={i} onClick={tile.onClick} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className={`${tile.color} rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition`}>
             <h2 className="text-lg font-bold text-purple-700">{tile.title}</h2>
@@ -170,8 +168,6 @@ const Home = ({ highlight }) => {
           </motion.div>
         ))}
       </motion.div>
-
-      {/* REST OF YOUR FILE STAYS 100% UNTOUCHED BELOW */}
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="bg-white rounded-2xl p-4 shadow-md">
         <h2 className="text-lg font-bold text-purple-700">Next Event</h2>
@@ -234,9 +230,12 @@ const Home = ({ highlight }) => {
           </motion.div>
         )}
 
-        {/* ✅ STAFF FEATURE ADDED - MODAL INTEGRATION */}
         {isStaffOpen && (
           <StaffModal isOpen={isStaffOpen} onClose={() => setIsStaffOpen(false)} />
+        )}
+
+        {isSupportOpen && (
+          <SupportLinksModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
         )}
       </AnimatePresence>
     </motion.div>
