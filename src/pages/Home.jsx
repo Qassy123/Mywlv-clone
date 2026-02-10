@@ -156,7 +156,6 @@ const Home = ({ highlight }) => {
       <motion.div className="grid grid-cols-2 gap-4" initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}>
         {[
           { color: "bg-blue-100", title: "Timetable", text: tileText, onClick: () => navigate("/timetable") },
-          { color: "bg-green-100", title: "Mail", text: mailRead ? "All up to date" : "Urgent • Unread", badge: !mailRead, onClick: () => { setIsMailOpen(true); setMailRead(true); } },
           { color: "bg-yellow-100", title: "Courses", text: `${modules.length}`, onClick: () => setIsCoursesOpen(true) },
           { color: "bg-purple-100", title: "Student Check-In", text: checkInSuccess ? "✅ Checked in" : "Tap to enter your lecture code", onClick: () => setIsCheckInOpen(true) },
           { color: "bg-red-100", title: "Staff", text: "View lecturers", onClick: () => setIsStaffOpen(true) },
