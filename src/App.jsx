@@ -6,6 +6,7 @@ import Timetable from "./pages/Timetable.jsx";
 import Calendar from "./pages/Calendar.jsx";
 import Grades from "./pages/Grades.jsx";
 import Login from "./pages/Login.jsx";
+import Mail from "./pages/Mail.jsx";
 import { TIMETABLE_MODULES } from "./data/timetable.js";
 import uowLogo from "./assets/uow-logo.jpg";
 import About from "./pages/About.jsx";
@@ -100,7 +101,7 @@ function AppContent() {
       value.includes("mail") || value.includes("inbox") ||
       value.includes("message") || value.includes("email")
     ) {
-      navigate("/");
+      navigate("/mail");
     }
     else if (
       value.includes("news") || value.includes("newsletter") ||
@@ -193,6 +194,8 @@ function AppContent() {
                 `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Calendar</NavLink>
               <NavLink to="/grades" className={({ isActive }) =>
                 `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Grades</NavLink>
+              <NavLink to="/mail" className={({ isActive }) =>
+                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Mail</NavLink>
               <NavLink to="/about" className={({ isActive }) =>
                 `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>About WLV</NavLink>
               <NavLink to="/privacy" className={({ isActive }) =>
@@ -253,7 +256,7 @@ function AppContent() {
                 <NavLink to="/grades" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Grades</NavLink>
                 <p className="text-xs font-bold text-gray-500 mt-2">APPS</p>
-                <NavLink to="/" onClick={() => setMenuOpen(false)}
+                <NavLink to="/mail" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Mail</NavLink>
                 <NavLink to="/" onClick={() => setMenuOpen(false)}
                   className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Newsroom</NavLink>
@@ -292,6 +295,7 @@ function AppContent() {
                   <Route path="/timetable" element={<Timetable />} />
                   <Route path="/calendar" element={<Calendar />} />
                   <Route path="/grades" element={<Grades />} />
+                  <Route path="/mail" element={<Mail />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/privacy" element={<Privacy />} />
                 </>
@@ -308,7 +312,7 @@ function AppContent() {
             <span className="material-icons">home</span>
             <span className="text-xs">Home</span>
           </NavLink>
-          <NavLink to="/" className={({ isActive }) =>
+          <NavLink to="/mail" className={({ isActive }) =>
             `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
             <span className="material-icons">mail</span>
             <span className="text-xs">Mail</span>
