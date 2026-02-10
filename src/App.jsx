@@ -283,6 +283,7 @@ function AppContent() {
             transition={{ duration: 0.3 }}
           >
             <Routes>
+              <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
               {!isAuthenticated ? (
                 <Route path="*" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
               ) : (
