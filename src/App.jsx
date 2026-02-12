@@ -22,9 +22,60 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
 
+  const [profileName, setProfileName] = useState("Qasim Shah");
+  const [profileEmail, setProfileEmail] = useState("dummy@wlv.ac.uk");
+  const [profileInitials, setProfileInitials] = useState("QS");
+  const [profileStudentId, setProfileStudentId] = useState("2364710");
+
+  // Decode token payload for profile display
+  const getTokenPayload = () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return null;
+      const part = token.split(".")[1];
+      if (!part) return null;
+      const json = atob(part.replace(/-/g, "+").replace(/_/g, "/"));
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (localStorage.getItem("token")) {
       setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Sync profile name/email/initials from JWT (fallback keeps current behaviour)
+  useEffect(() => {
+    const payload = getTokenPayload();
+    if (!payload) return;
+
+    if (payload.email && typeof payload.email === "string") {
+      setProfileEmail(payload.email);
+      const nameFromEmail = payload.email.split("@")[0] || "";
+      if (nameFromEmail) {
+        const pretty =
+          nameFromEmail
+            .split(/[._-]+/g)
+            .filter(Boolean)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ") || profileName;
+        setProfileName(pretty);
+        const initials = pretty
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((w) => w.charAt(0).toUpperCase())
+          .join("");
+        if (initials) setProfileInitials(initials);
+      }
+    }
+
+    if (payload.studentId || payload.student_id || payload.sid) {
+      const sid = String(payload.studentId || payload.student_id || payload.sid);
+      if (sid) setProfileStudentId(sid);
     }
   }, []);
 
@@ -147,13 +198,13 @@ function AppContent() {
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center font-bold text-purple-700"
                 >
-                  QS
+                  {profileInitials}
                 </button>
                 {profileOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50 dark:bg-gray-800 dark:text-white">
-                    <p className="font-bold text-purple-800 dark:text-purple-300">Qasim Shah</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Student ID: 2364710</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">dummy@wlv.ac.uk</p>
+                    <p className="font-bold text-purple-800 dark:text-purple-300">{profileName}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Student ID: {profileStudentId}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{profileEmail}</p>
                     <hr className="my-2" />
                     <button
                       onClick={() => setDarkMode(!darkMode)}
@@ -224,13 +275,13 @@ function AppContent() {
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center font-bold text-purple-700"
                   >
-                    QS
+                    {profileInitials}
                   </button>
                   {profileOpen && (
                     <div className="absolute left-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50 dark:bg-gray-800 dark:text-white">
-                      <p className="font-bold text-purple-800 dark:text-purple-300">Qasim Shah</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Student ID: 2364710</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">dummy@wlv.ac.uk</p>
+                      <p className="font-bold text-purple-800 dark:text-purple-300">{profileName}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Student ID: {profileStudentId}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{profileEmail}</p>
                       <hr className="my-2" />
                       <button
                         onClick={() => setDarkMode(!darkMode)}
