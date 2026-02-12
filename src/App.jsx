@@ -47,13 +47,14 @@ function AppContent() {
     setProfileOpen(false);
   };
 
+  // Route search keywords to pages
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase().trim();
     setSearchQuery(value);
     setSearchError("");
     if (!value) return;
     if (value.length < 4) {
-      setSearchError("Type at least 4 characters to search 🔍");
+      setSearchError("Type at least 4 characters to search");
       return;
     }
     if (
@@ -113,7 +114,7 @@ function AppContent() {
       navigate("/timetable");
     }
     else {
-      setSearchError("No results match your search ❌");
+      setSearchError("No results match your search");
     }
   };
 
@@ -158,7 +159,7 @@ function AppContent() {
                       onClick={() => setDarkMode(!darkMode)}
                       className="w-full bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-3 py-1 rounded mb-2"
                     >
-                      {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+                      {darkMode ? "Light Mode" : "Dark Mode"}
                     </button>
                     <button
                       onClick={handleSignOut}
@@ -235,7 +236,7 @@ function AppContent() {
                         onClick={() => setDarkMode(!darkMode)}
                         className="w-full bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-3 py-1 rounded mb-2"
                       >
-                        {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+                        {darkMode ? "Light Mode" : "Dark Mode"}
                       </button>
                       <button
                         onClick={handleSignOut}
