@@ -13,6 +13,7 @@ import About from "./pages/About.jsx";
 import Privacy from "./pages/Privacy.jsx";
 
 function AppContent() {
+  // UI state for menus and theme
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,12 +23,13 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
 
+  // Profile display state derived from token (with safe fallbacks)
   const [profileName, setProfileName] = useState("Qasim Shah");
   const [profileEmail, setProfileEmail] = useState("dummy@wlv.ac.uk");
   const [profileInitials, setProfileInitials] = useState("QS");
   const [profileStudentId, setProfileStudentId] = useState("2364710");
 
-  // Decode token payload for profile display
+  // Decode JWT payload for profile fields
   const getTokenPayload = () => {
     try {
       const token = localStorage.getItem("token");
@@ -41,6 +43,7 @@ function AppContent() {
     }
   };
 
+  // Initialize auth state from token
   useEffect(() => {
     if (localStorage.getItem("token")) {
       setIsAuthenticated(true);
@@ -54,6 +57,7 @@ function AppContent() {
 
     if (payload.email && typeof payload.email === "string") {
       setProfileEmail(payload.email);
+
       const nameFromEmail = payload.email.split("@")[0] || "";
       if (nameFromEmail) {
         const pretty =
@@ -62,13 +66,16 @@ function AppContent() {
             .filter(Boolean)
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
             .join(" ") || profileName;
+
         setProfileName(pretty);
+
         const initials = pretty
           .split(" ")
           .filter(Boolean)
           .slice(0, 2)
           .map((w) => w.charAt(0).toUpperCase())
           .join("");
+
         if (initials) setProfileInitials(initials);
       }
     }
@@ -79,6 +86,7 @@ function AppContent() {
     }
   }, []);
 
+  // Persist dark mode preference and toggle html class
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -89,6 +97,7 @@ function AppContent() {
     }
   }, [darkMode]);
 
+  // Clear auth and return to login
   const handleSignOut = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("token");
@@ -381,6 +390,7 @@ function AppContent() {
 }
 
 export default function App() {
+  // Provide app-wide routing context
   return (
     <Router>
       <AppContent />
