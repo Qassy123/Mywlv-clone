@@ -36,12 +36,15 @@ function handleDisconnect() {
 
   db.connect(err => {
     if (err) setTimeout(handleDisconnect, 2000);
-    else console.log("✅ MySQL connected");
+    else console.log("MySQL connected");
   });
 
   db.on("error", err => {
     if (err.code === "PROTOCOL_CONNECTION_LOST") handleDisconnect();
-    else throw err;
+    else {
+      console.error("MySQL error:", err);
+      handleDisconnect();
+    }
   });
 }
 handleDisconnect();
@@ -76,21 +79,47 @@ function seedDemoDataForUser(newUserId, done) {
   );
 }
 
+// Seed demo data on login for users who already exist but have empty tables
+function ensureUserHasDemoData(userId, done) {
+  db.query(
+    `SELECT
+      (SELECT COUNT(*) FROM timetable WHERE user_id = ?) AS timetableCount,
+      (SELECT COUNT(*) FROM grades WHERE user_id = ?) AS gradesCount,
+      (SELECT COUNT(*) FROM calendar WHERE user_id = ?) AS calendarCount`,
+    [userId, userId, userId],
+    (err, rows) => {
+      if (err) return done(err);
+
+      const r = rows && rows[0] ? rows[0] : {};
+      const total =
+        Number(r.timetableCount || 0) +
+        Number(r.gradesCount || 0) +
+        Number(r.calendarCount || 0);
+
+      if (total > 0) return done(null);
+      seedDemoDataForUser(userId, done);
+    }
+  );
+}
+
 // User registration
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Missing fields" });
 
   db.query("SELECT id FROM users WHERE email = ?", [email], (err, rows) => {
+    if (err) return res.status(500).json({ error: "Database error" });
     if (rows.length) return res.status(400).json({ error: "User exists" });
 
     db.query(
       "INSERT INTO users (email, password) VALUES (?, ?)",
       [email, password],
-      (err, result) => {
-        const newUserId = result.insertId;
+      (err2, result) => {
+        if (err2) return res.status(500).json({ error: "Database error" });
 
-        seedDemoDataForUser(newUserId, () => {
+        const newUserId = result.insertId;
+        seedDemoDataForUser(newUserId, (seedErr) => {
+          if (seedErr) return res.status(500).json({ error: "Seed failed" });
           res.json({ message: "User registered", id: newUserId });
         });
       }
@@ -106,16 +135,22 @@ app.post("/login", (req, res) => {
     "SELECT * FROM users WHERE email = ? AND password = ?",
     [email, password],
     (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
       if (!results.length) return res.status(401).json({ error: "Invalid credentials" });
 
       const user = results[0];
-      const token = jwt.sign(
-        { id: user.id, email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
 
-      res.json({ token });
+      ensureUserHasDemoData(user.id, (seedErr) => {
+        if (seedErr) console.error("Seed-on-login failed:", seedErr);
+
+        const token = jwt.sign(
+          { id: user.id, email: user.email },
+          process.env.JWT_SECRET,
+          { expiresIn: "1h" }
+        );
+
+        res.json({ token });
+      });
     }
   );
 });
@@ -137,7 +172,10 @@ app.get("/grades", verifyToken, (req, res) => {
   db.query(
     "SELECT module, grade FROM grades WHERE user_id = ?",
     [req.user.id],
-    (_, results) => res.json({ grades: results })
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ grades: results });
+    }
   );
 });
 
@@ -146,7 +184,10 @@ app.get("/timetable", verifyToken, (req, res) => {
   db.query(
     "SELECT day, module, time, room, status FROM timetable WHERE user_id = ?",
     [req.user.id],
-    (_, results) => res.json({ timetable: results })
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ timetable: results });
+    }
   );
 });
 
@@ -155,13 +196,19 @@ app.get("/calendar", verifyToken, (req, res) => {
   db.query(
     "SELECT id, title, description, date, status, priority FROM calendar WHERE user_id = ?",
     [req.user.id],
-    (_, results) => res.json({ calendar: results })
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ calendar: results });
+    }
   );
 });
 
 // Staff directory endpoint
 app.get("/staff", (req, res) => {
-  db.query("SELECT * FROM staff", (_, results) => res.json(results));
+  db.query("SELECT * FROM staff", (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    res.json(results);
+  });
 });
 
 // Health check
@@ -170,5 +217,5 @@ app.get("/health", (_, res) => res.json({ status: "UP" }));
 // Server start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
