@@ -41,10 +41,7 @@ function handleDisconnect() {
 
   db.on("error", err => {
     if (err.code === "PROTOCOL_CONNECTION_LOST") handleDisconnect();
-    else {
-      console.error("MySQL error:", err);
-      handleDisconnect();
-    }
+    else throw err;
   });
 }
 handleDisconnect();
@@ -79,27 +76,65 @@ function seedDemoDataForUser(newUserId, done) {
   );
 }
 
-// Seed demo data on login for users who already exist but have empty tables
-function ensureUserHasDemoData(userId, done) {
-  db.query(
-    `SELECT
-      (SELECT COUNT(*) FROM timetable WHERE user_id = ?) AS timetableCount,
-      (SELECT COUNT(*) FROM grades WHERE user_id = ?) AS gradesCount,
-      (SELECT COUNT(*) FROM calendar WHERE user_id = ?) AS calendarCount`,
-    [userId, userId, userId],
-    (err, rows) => {
-      if (err) return done(err);
+// Seed missing demo tables for an existing user
+function seedMissingDemoDataForUser(userId, done) {
+  const demoUserId = 1;
 
-      const r = rows && rows[0] ? rows[0] : {};
-      const total =
-        Number(r.timetableCount || 0) +
-        Number(r.gradesCount || 0) +
-        Number(r.calendarCount || 0);
+  db.query("SELECT COUNT(*) AS c FROM timetable WHERE user_id = ?", [userId], (e1, r1) => {
+    if (e1) return done(e1);
+    const hasTimetable = (r1?.[0]?.c || 0) > 0;
 
-      if (total > 0) return done(null);
-      seedDemoDataForUser(userId, done);
-    }
-  );
+    db.query("SELECT COUNT(*) AS c FROM grades WHERE user_id = ?", [userId], (e2, r2) => {
+      if (e2) return done(e2);
+      const hasGrades = (r2?.[0]?.c || 0) > 0;
+
+      db.query("SELECT COUNT(*) AS c FROM calendar WHERE user_id = ?", [userId], (e3, r3) => {
+        if (e3) return done(e3);
+        const hasCalendar = (r3?.[0]?.c || 0) > 0;
+
+        const tasks = [];
+
+        if (!hasTimetable) {
+          tasks.push((cb) => db.query(
+            `INSERT INTO timetable (user_id, day, module, time, room, status)
+             SELECT ?, day, module, time, room, status FROM timetable WHERE user_id = ?`,
+            [userId, demoUserId],
+            cb
+          ));
+        }
+
+        if (!hasGrades) {
+          tasks.push((cb) => db.query(
+            `INSERT INTO grades (user_id, module, grade)
+             SELECT ?, module, grade FROM grades WHERE user_id = ?`,
+            [userId, demoUserId],
+            cb
+          ));
+        }
+
+        if (!hasCalendar) {
+          tasks.push((cb) => db.query(
+            `INSERT INTO calendar (user_id, title, description, date, status, priority)
+             SELECT ?, title, description, date, status, priority FROM calendar WHERE user_id = ?`,
+            [userId, demoUserId],
+            cb
+          ));
+        }
+
+        let i = 0;
+        const runNext = () => {
+          if (i >= tasks.length) return done();
+          tasks[i]((err) => {
+            if (err) return done(err);
+            i += 1;
+            runNext();
+          });
+        };
+
+        runNext();
+      });
+    });
+  });
 }
 
 // User registration
@@ -108,7 +143,6 @@ app.post("/register", (req, res) => {
   if (!email || !password) return res.status(400).json({ error: "Missing fields" });
 
   db.query("SELECT id FROM users WHERE email = ?", [email], (err, rows) => {
-    if (err) return res.status(500).json({ error: "Database error" });
     if (rows.length) return res.status(400).json({ error: "User exists" });
 
     db.query(
@@ -118,8 +152,7 @@ app.post("/register", (req, res) => {
         if (err2) return res.status(500).json({ error: "Database error" });
 
         const newUserId = result.insertId;
-        seedDemoDataForUser(newUserId, (seedErr) => {
-          if (seedErr) return res.status(500).json({ error: "Seed failed" });
+        seedDemoDataForUser(newUserId, () => {
           res.json({ message: "User registered", id: newUserId });
         });
       }
@@ -140,15 +173,13 @@ app.post("/login", (req, res) => {
 
       const user = results[0];
 
-      ensureUserHasDemoData(user.id, (seedErr) => {
-        if (seedErr) console.error("Seed-on-login failed:", seedErr);
-
+      // Ensure demo data exists for users that missed seeding
+      seedMissingDemoDataForUser(user.id, () => {
         const token = jwt.sign(
           { id: user.id, email: user.email },
           process.env.JWT_SECRET,
           { expiresIn: "1h" }
         );
-
         res.json({ token });
       });
     }
@@ -172,10 +203,7 @@ app.get("/grades", verifyToken, (req, res) => {
   db.query(
     "SELECT module, grade FROM grades WHERE user_id = ?",
     [req.user.id],
-    (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
-      res.json({ grades: results });
-    }
+    (_, results) => res.json({ grades: results })
   );
 });
 
@@ -184,10 +212,7 @@ app.get("/timetable", verifyToken, (req, res) => {
   db.query(
     "SELECT day, module, time, room, status FROM timetable WHERE user_id = ?",
     [req.user.id],
-    (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
-      res.json({ timetable: results });
-    }
+    (_, results) => res.json({ timetable: results })
   );
 });
 
@@ -196,19 +221,13 @@ app.get("/calendar", verifyToken, (req, res) => {
   db.query(
     "SELECT id, title, description, date, status, priority FROM calendar WHERE user_id = ?",
     [req.user.id],
-    (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
-      res.json({ calendar: results });
-    }
+    (_, results) => res.json({ calendar: results })
   );
 });
 
 // Staff directory endpoint
 app.get("/staff", (req, res) => {
-  db.query("SELECT * FROM staff", (err, results) => {
-    if (err) return res.status(500).json({ error: "Database error" });
-    res.json(results);
-  });
+  db.query("SELECT * FROM staff", (_, results) => res.json(results));
 });
 
 // Health check
