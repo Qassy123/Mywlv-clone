@@ -573,7 +573,7 @@ function AppContent() {
               `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`
             }
           >
-            <span className="material-icons">fact_check</span>
+            <span className="material-icons">how_to_reg</span>
             <span className="text-xs">Attendance</span>
           </NavLink>
 
