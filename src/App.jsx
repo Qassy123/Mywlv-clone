@@ -7,10 +7,12 @@ import Calendar from "./pages/Calendar.jsx";
 import Grades from "./pages/Grades.jsx";
 import Login from "./pages/Login.jsx";
 import Mail from "./pages/Mail.jsx";
-import { TIMETABLE_MODULES } from "./data/timetable.js";
-import uowLogo from "./assets/uow-logo.jpg";
 import About from "./pages/About.jsx";
 import Privacy from "./pages/Privacy.jsx";
+import Attendance from "./pages/Attendance.jsx";
+import Absence from "./pages/Absence.jsx";
+import { TIMETABLE_MODULES } from "./data/timetable.js";
+import uowLogo from "./assets/uow-logo.jpg";
 
 function AppContent() {
   // UI state for menus and theme
@@ -29,7 +31,7 @@ function AppContent() {
   const [profileInitials, setProfileInitials] = useState("QS");
   const [profileStudentId, setProfileStudentId] = useState("2364710");
 
-  // Decode JWT payload for profile fields
+  // This function decodes the JWT payload so profile details can be shown in the UI.
   const getTokenPayload = () => {
     try {
       const token = localStorage.getItem("token");
@@ -97,7 +99,7 @@ function AppContent() {
     }
   }, [darkMode]);
 
-  // Clear auth and return to login
+  // This function clears the auth session and returns the user to the login page.
   const handleSignOut = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("token");
@@ -107,16 +109,19 @@ function AppContent() {
     setProfileOpen(false);
   };
 
-  // Route search keywords to pages
+  // This function routes search terms to the most relevant page in the app.
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase().trim();
     setSearchQuery(value);
     setSearchError("");
+
     if (!value) return;
+
     if (value.length < 4) {
       setSearchError("Type at least 4 characters to search");
       return;
     }
+
     if (
       value.startsWith("gra") || value.startsWith("gr") ||
       value.startsWith("mar") || value.includes("result") ||
@@ -142,12 +147,29 @@ function AppContent() {
       navigate("/calendar");
     }
     else if (
-      value.startsWith("abo") || value.includes("about") || value.includes("university") || value.includes("info") || value.includes("wlv")
+      value.includes("attendance") || value.includes("present") ||
+      value.includes("check in") || value.includes("checkin") ||
+      value.includes("lecture code") || value.includes("session")
+    ) {
+      navigate("/attendance");
+    }
+    else if (
+      value.includes("absence") || value.includes("absent") ||
+      value.includes("leave") || value.includes("miss class") ||
+      value.includes("reason form")
+    ) {
+      navigate("/absence");
+    }
+    else if (
+      value.startsWith("abo") || value.includes("about") ||
+      value.includes("university") || value.includes("info") ||
+      value.includes("wlv")
     ) {
       navigate("/about");
     }
     else if (
-      value.includes("privacy") || value.includes("policy") || value.includes("data") || value.includes("gdpr")
+      value.includes("privacy") || value.includes("policy") ||
+      value.includes("data") || value.includes("gdpr")
     ) {
       navigate("/privacy");
     }
@@ -179,15 +201,22 @@ function AppContent() {
   };
 
   return (
-    <motion.div key={darkMode ? "dark" : "light"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
+    <motion.div
+      key={darkMode ? "dark" : "light"}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <header className="bg-purple-800 text-white relative dark:bg-gray-900">
         <div className="mx-auto max-w-6xl flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
             <img src={uowLogo} alt="University of Wolverhampton Logo" className="h-16 w-auto object-contain" />
             <h1 className="text-xl font-semibold hidden sm:block">
-              myWLV (Redesign) – University of Wolverhampton
+              myWLV (Redesign) - University of Wolverhampton
             </h1>
           </div>
+
           {isAuthenticated && (
             <div className="hidden md:flex items-center gap-4">
               <div>
@@ -202,6 +231,7 @@ function AppContent() {
                   <p className="text-red-500 text-sm mt-1">{searchError}</p>
                 )}
               </div>
+
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
@@ -209,6 +239,7 @@ function AppContent() {
                 >
                   {profileInitials}
                 </button>
+
                 {profileOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50 dark:bg-gray-800 dark:text-white">
                     <p className="font-bold text-purple-800 dark:text-purple-300">{profileName}</p>
@@ -232,6 +263,7 @@ function AppContent() {
               </div>
             </div>
           )}
+
           <button
             className="md:hidden text-white focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -246,25 +278,95 @@ function AppContent() {
       {isAuthenticated && (
         <nav className="bg-gray-100 border-b dark:bg-gray-800">
           <div className="mx-auto max-w-6xl flex flex-col md:flex-row gap-2 md:gap-4 p-4">
-            <div className="hidden md:flex gap-2">
-              <NavLink to="/" end className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Home</NavLink>
-              <NavLink to="/timetable" className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Timetable</NavLink>
-              <NavLink to="/calendar" className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Calendar</NavLink>
-              <NavLink to="/grades" className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Grades</NavLink>
-              <NavLink to="/mail" className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Mail</NavLink>
-              <NavLink to="/about" className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>About WLV</NavLink>
-              <NavLink to="/privacy" className={({ isActive }) =>
-                `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`}>Privacy</NavLink>
-              {isAuthenticated && (
-                <button onClick={handleSignOut}
-                  className="px-3 py-2 rounded text-center bg-red-600 text-white hover:bg-red-700">Sign Out</button>
-              )}
+            <div className="hidden md:flex gap-2 flex-wrap">
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Home
+              </NavLink>
+
+              <NavLink
+                to="/timetable"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Timetable
+              </NavLink>
+
+              <NavLink
+                to="/calendar"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Calendar
+              </NavLink>
+
+              <NavLink
+                to="/grades"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Grades
+              </NavLink>
+
+              <NavLink
+                to="/attendance"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Attendance
+              </NavLink>
+
+              <NavLink
+                to="/absence"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Absence
+              </NavLink>
+
+              <NavLink
+                to="/mail"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Mail
+              </NavLink>
+
+              <NavLink
+                to="/about"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                About WLV
+              </NavLink>
+
+              <NavLink
+                to="/privacy"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded text-center ${isActive ? "bg-purple-900 text-white" : "bg-purple-700 text-white hover:bg-purple-800"}`
+                }
+              >
+                Privacy
+              </NavLink>
+
+              <button
+                onClick={handleSignOut}
+                className="px-3 py-2 rounded text-center bg-red-600 text-white hover:bg-red-700"
+              >
+                Sign Out
+              </button>
             </div>
 
             {menuOpen && (
@@ -276,9 +378,11 @@ function AppContent() {
                   onChange={handleSearch}
                   className="px-3 py-2 rounded-lg text-black mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
+
                 {searchError && (
                   <p className="text-red-500 text-sm">{searchError}</p>
                 )}
+
                 <div className="relative mb-2">
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
@@ -286,6 +390,7 @@ function AppContent() {
                   >
                     {profileInitials}
                   </button>
+
                   {profileOpen && (
                     <div className="absolute left-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg p-4 z-50 dark:bg-gray-800 dark:text-white">
                       <p className="font-bold text-purple-800 dark:text-purple-300">{profileName}</p>
@@ -307,24 +412,92 @@ function AppContent() {
                     </div>
                   )}
                 </div>
+
                 <p className="text-xs font-bold text-gray-500 mt-2">DASHBOARDS</p>
-                <NavLink to="/" end onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Home</NavLink>
-                <NavLink to="/timetable" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Timetable</NavLink>
-                <NavLink to="/calendar" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Calendar</NavLink>
-                <NavLink to="/grades" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800">Grades</NavLink>
+
+                <NavLink
+                  to="/"
+                  end
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800"
+                >
+                  Home
+                </NavLink>
+
+                <NavLink
+                  to="/timetable"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800"
+                >
+                  Timetable
+                </NavLink>
+
+                <NavLink
+                  to="/calendar"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800"
+                >
+                  Calendar
+                </NavLink>
+
+                <NavLink
+                  to="/grades"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800"
+                >
+                  Grades
+                </NavLink>
+
+                <NavLink
+                  to="/attendance"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800"
+                >
+                  Attendance
+                </NavLink>
+
+                <NavLink
+                  to="/absence"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-purple-700 text-white hover:bg-purple-800"
+                >
+                  Absence
+                </NavLink>
+
                 <p className="text-xs font-bold text-gray-500 mt-2">APPS</p>
-                <NavLink to="/mail" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Mail</NavLink>
-                <NavLink to="/" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Newsroom</NavLink>
-                <NavLink to="/about" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">About WLV</NavLink>
-                <NavLink to="/privacy" onClick={() => setMenuOpen(false)}
-                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300">Privacy Policy</NavLink>
+
+                <NavLink
+                  to="/mail"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                >
+                  Mail
+                </NavLink>
+
+                <NavLink
+                  to="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                >
+                  Newsroom
+                </NavLink>
+
+                <NavLink
+                  to="/about"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                >
+                  About WLV
+                </NavLink>
+
+                <NavLink
+                  to="/privacy"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                >
+                  Privacy Policy
+                </NavLink>
+
                 <button
                   onClick={handleSignOut}
                   className="px-3 py-2 rounded text-left text-red-600 hover:bg-gray-200"
@@ -356,6 +529,8 @@ function AppContent() {
                   <Route path="/timetable" element={<Timetable />} />
                   <Route path="/calendar" element={<Calendar />} />
                   <Route path="/grades" element={<Grades />} />
+                  <Route path="/attendance" element={<Attendance />} />
+                  <Route path="/absence" element={<Absence />} />
                   <Route path="/mail" element={<Mail />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/privacy" element={<Privacy />} />
@@ -368,18 +543,43 @@ function AppContent() {
 
       {isAuthenticated && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t flex justify-around items-center py-2 shadow-md z-50">
-          <NavLink to="/" end className={({ isActive }) =>
-            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`
+            }
+          >
             <span className="material-icons">home</span>
             <span className="text-xs">Home</span>
           </NavLink>
-          <NavLink to="/mail" className={({ isActive }) =>
-            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
+
+          <NavLink
+            to="/attendance"
+            className={({ isActive }) =>
+              `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`
+            }
+          >
+            <span className="material-icons">fact_check</span>
+            <span className="text-xs">Attendance</span>
+          </NavLink>
+
+          <NavLink
+            to="/mail"
+            className={({ isActive }) =>
+              `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`
+            }
+          >
             <span className="material-icons">mail</span>
             <span className="text-xs">Mail</span>
           </NavLink>
-          <NavLink to="/calendar" className={({ isActive }) =>
-            `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`}>
+
+          <NavLink
+            to="/calendar"
+            className={({ isActive }) =>
+              `flex flex-col items-center ${isActive ? "text-purple-700" : "text-gray-500 dark:text-gray-300"}`
+            }
+          >
             <span className="material-icons">event</span>
             <span className="text-xs">Calendar</span>
           </NavLink>
@@ -390,7 +590,7 @@ function AppContent() {
 }
 
 export default function App() {
-  // Provide app-wide routing context
+  // This function provides the app-wide router context for all pages.
   return (
     <Router>
       <AppContent />
