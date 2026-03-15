@@ -23,7 +23,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// MySQL connection with auto-reconnect
+// This function creates a MySQL connection and reconnects if the connection drops.
 let db;
 function handleDisconnect() {
   db = mysql.createConnection({
@@ -34,12 +34,12 @@ function handleDisconnect() {
     database: process.env.DB_NAME,
   });
 
-  db.connect(err => {
+  db.connect((err) => {
     if (err) setTimeout(handleDisconnect, 2000);
     else console.log("MySQL connected");
   });
 
-  db.on("error", err => {
+  db.on("error", (err) => {
     if (err.code === "PROTOCOL_CONNECTION_LOST") handleDisconnect();
     else {
       console.error("MySQL error:", err);
@@ -49,7 +49,7 @@ function handleDisconnect() {
 }
 handleDisconnect();
 
-// Seed demo data from user_id = 1 into new user
+// This function seeds demo timetable, grades, and calendar data from user_id 1 into a new user.
 function seedDemoDataForUser(newUserId, done) {
   const demoUserId = 1;
 
@@ -79,7 +79,7 @@ function seedDemoDataForUser(newUserId, done) {
   );
 }
 
-// Seed demo data on login for users who already exist but have empty tables
+// This function ensures an existing user has demo data if their core tables are empty.
 function ensureUserHasDemoData(userId, done) {
   db.query(
     `SELECT
@@ -155,7 +155,7 @@ app.post("/login", (req, res) => {
   );
 });
 
-// JWT verification middleware
+// This middleware verifies the JWT token and attaches the decoded user to the request.
 function verifyToken(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(403).json({ error: "No token" });
@@ -166,6 +166,139 @@ function verifyToken(req, res, next) {
     next();
   });
 }
+
+// This function formats a JavaScript date into a YYYY-MM-DD string.
+function formatDateOnly(dateValue) {
+  const date = new Date(dateValue);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// This function gets the next integer id for tables that may not auto-increment in Railway UI.
+function getNextTableId(tableName, done) {
+  db.query(`SELECT COALESCE(MAX(id), 0) + 1 AS nextId FROM ${tableName}`, (err, rows) => {
+    if (err) return done(err);
+    done(null, rows[0].nextId);
+  });
+}
+
+// This endpoint validates a lecture code and records attendance for the logged-in user.
+app.post("/checkin", verifyToken, (req, res) => {
+  const { code } = req.body;
+  const trimmedCode = String(code || "").trim();
+
+  if (!trimmedCode) {
+    return res.status(400).json({ error: "Lecture code is required" });
+  }
+
+  db.query(
+    "SELECT id, module, code, date FROM lecture_codes WHERE code = ? ORDER BY date DESC LIMIT 1",
+    [trimmedCode],
+    (codeErr, codeRows) => {
+      if (codeErr) return res.status(500).json({ error: "Database error" });
+      if (!codeRows.length) return res.status(400).json({ error: "Invalid lecture code" });
+
+      const lecture = codeRows[0];
+      const attendanceDate = formatDateOnly(lecture.date);
+
+      db.query(
+        "SELECT id FROM attendance WHERE user_id = ? AND module = ? AND date = ? LIMIT 1",
+        [req.user.id, lecture.module, attendanceDate],
+        (existingErr, existingRows) => {
+          if (existingErr) return res.status(500).json({ error: "Database error" });
+          if (existingRows.length) {
+            return res.status(400).json({ error: "You have already checked in for this session" });
+          }
+
+          getNextTableId("attendance", (idErr, nextId) => {
+            if (idErr) return res.status(500).json({ error: "Database error" });
+
+            db.query(
+              "INSERT INTO attendance (id, user_id, module, date, status) VALUES (?, ?, ?, ?, ?)",
+              [nextId, req.user.id, lecture.module, attendanceDate, "Present"],
+              (insertErr) => {
+                if (insertErr) return res.status(500).json({ error: "Database error" });
+
+                return res.json({
+                  message: "Check-in successful",
+                  attendance: {
+                    id: nextId,
+                    user_id: req.user.id,
+                    module: lecture.module,
+                    date: attendanceDate,
+                    status: "Present",
+                  },
+                });
+              }
+            );
+          });
+        }
+      );
+    }
+  );
+});
+
+// This endpoint returns all attendance records for the logged-in user.
+app.get("/attendance", verifyToken, (req, res) => {
+  db.query(
+    "SELECT id, user_id, module, date, status FROM attendance WHERE user_id = ? ORDER BY date DESC, id DESC",
+    [req.user.id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ attendance: results });
+    }
+  );
+});
+
+// This endpoint creates a new absence request for the logged-in user.
+app.post("/absences", verifyToken, (req, res) => {
+  const { module, date, reason } = req.body;
+  const trimmedModule = String(module || "").trim();
+  const trimmedReason = String(reason || "").trim();
+  const trimmedDate = String(date || "").trim();
+
+  if (!trimmedModule || !trimmedDate || !trimmedReason) {
+    return res.status(400).json({ error: "Module, date, and reason are required" });
+  }
+
+  getNextTableId("absences", (idErr, nextId) => {
+    if (idErr) return res.status(500).json({ error: "Database error" });
+
+    db.query(
+      "INSERT INTO absences (id, user_id, module, date, reason, status) VALUES (?, ?, ?, ?, ?, ?)",
+      [nextId, req.user.id, trimmedModule, trimmedDate, trimmedReason, "Pending"],
+      (insertErr) => {
+        if (insertErr) return res.status(500).json({ error: "Database error" });
+
+        res.json({
+          message: "Absence submitted successfully",
+          absence: {
+            id: nextId,
+            user_id: req.user.id,
+            module: trimmedModule,
+            date: trimmedDate,
+            reason: trimmedReason,
+            status: "Pending",
+          },
+        });
+      }
+    );
+  });
+});
+
+// This endpoint returns all absence requests for the logged-in user.
+app.get("/absences", verifyToken, (req, res) => {
+  db.query(
+    "SELECT id, user_id, module, date, reason, status FROM absences WHERE user_id = ? ORDER BY date DESC, id DESC",
+    [req.user.id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json({ absences: results });
+    }
+  );
+});
 
 // Grades endpoint
 app.get("/grades", verifyToken, (req, res) => {
