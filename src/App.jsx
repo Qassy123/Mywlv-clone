@@ -123,6 +123,39 @@ function AppContent() {
     }
 
     if (
+      value.startsWith("atte") ||
+      value.startsWith("atten") ||
+      value.includes("attendance") ||
+      value.includes("present") ||
+      value.includes("check in") ||
+      value.includes("checkin") ||
+      value.includes("lecture code") ||
+      value.includes("session")
+    ) {
+      navigate("/attendance");
+    }
+    else if (
+      value.startsWith("abse") ||
+      value.startsWith("absen") ||
+      value.includes("absence") ||
+      value.includes("absent") ||
+      value.includes("leave") ||
+      value.includes("miss class") ||
+      value.includes("reason form")
+    ) {
+      navigate("/absence");
+    }
+    else if (
+      value.startsWith("priv") ||
+      value.startsWith("priva") ||
+      value.includes("privacy") ||
+      value.includes("policy") ||
+      value.includes("data") ||
+      value.includes("gdpr")
+    ) {
+      navigate("/privacy");
+    }
+    else if (
       value.startsWith("gra") || value.startsWith("gr") ||
       value.startsWith("mar") || value.includes("result") ||
       value.includes("exam") || value.includes("assign") ||
@@ -147,31 +180,11 @@ function AppContent() {
       navigate("/calendar");
     }
     else if (
-      value.includes("attendance") || value.includes("present") ||
-      value.includes("check in") || value.includes("checkin") ||
-      value.includes("lecture code") || value.includes("session")
-    ) {
-      navigate("/attendance");
-    }
-    else if (
-      value.includes("absence") || value.includes("absent") ||
-      value.includes("leave") || value.includes("miss class") ||
-      value.includes("reason form")
-    ) {
-      navigate("/absence");
-    }
-    else if (
       value.startsWith("abo") || value.includes("about") ||
       value.includes("university") || value.includes("info") ||
       value.includes("wlv")
     ) {
       navigate("/about");
-    }
-    else if (
-      value.includes("privacy") || value.includes("policy") ||
-      value.includes("data") || value.includes("gdpr")
-    ) {
-      navigate("/privacy");
     }
     else if (
       value.startsWith("ho") || value.startsWith("hom") ||
