@@ -305,7 +305,11 @@ const Home = ({ highlight }) => {
               className="bg-white rounded-xl p-6 shadow-lg w-80"
             >
               <h3 className="text-lg font-bold text-purple-700 mb-3">Enter Lecture Code</h3>
+              <label htmlFor="checkInCode" className="sr-only">
+                Lecture Code
+              </label>
               <input
+                id="checkInCode"
                 type="text"
                 placeholder="Enter code..."
                 value={checkInCode}
@@ -355,6 +359,8 @@ const Home = ({ highlight }) => {
               className="bg-white rounded-xl p-6 shadow-lg w-80 relative"
             >
               <button
+                type="button"
+                aria-label="Close courses modal"
                 onClick={() => setIsCoursesOpen(false)}
                 className="absolute top-2 right-2 px-2 py-1 bg-gray-300 rounded hover:bg-gray-400"
               >
@@ -387,6 +393,8 @@ const Home = ({ highlight }) => {
               className="bg-white rounded-xl p-6 shadow-lg w-96 relative"
             >
               <button
+                type="button"
+                aria-label="Close latest mail modal"
                 onClick={() => setIsMailOpen(false)}
                 className="absolute top-2 right-2 px-2 py-1 bg-gray-300 rounded hover:bg-gray-400"
               >
