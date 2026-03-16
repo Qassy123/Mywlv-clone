@@ -217,14 +217,18 @@ export default function Calendar() {
       )}
 
       <div className="flex gap-2 mb-4 flex-wrap">
+        <label htmlFor="calendar-search" className="sr-only">Search events</label>
         <input
+          id="calendar-search"
           type="text"
           placeholder="Search events..."
           className="flex-1 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <label htmlFor="calendar-filter" className="sr-only">Filter events</label>
         <select
+          id="calendar-filter"
           className="border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -236,7 +240,7 @@ export default function Calendar() {
         <button onClick={() => setShowForm(!showForm)} className="bg-purple-700 text-white px-3 rounded hover:bg-purple-800">
           + Add Event
         </button>
-        <button onClick={exportICS} className="bg-green-600 text-white px-3 rounded hover:bg-green-700">Export .ICS</button>
+        <button onClick={exportICS} className="bg-green-700 text-white px-3 rounded hover:bg-green-800">Export .ICS</button>
         <button onClick={exportCSV} className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700">Export CSV</button>
         <button onClick={exportPDF} className="bg-gray-700 text-white px-3 rounded hover:bg-gray-800">Export PDF</button>
         <button onClick={() => setMonthView(!monthView)} className="bg-blue-600 text-white px-3 rounded hover:bg-blue-700">
@@ -246,20 +250,26 @@ export default function Calendar() {
 
       {showForm && (
         <form onSubmit={addEvent} className="mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded">
+          <label htmlFor="event-title" className="sr-only">Event title</label>
           <input
+            id="event-title"
             type="text"
             placeholder="Event title"
             className="block w-full mb-2 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={newEvent.title}
             onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
           />
+          <label htmlFor="event-date" className="sr-only">Event date</label>
           <input
+            id="event-date"
             type="date"
             className="block w-full mb-2 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={newEvent.date}
             onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
           />
+          <label htmlFor="event-description" className="sr-only">Event description</label>
           <textarea
+            id="event-description"
             placeholder="Description (optional)"
             className="block w-full mb-2 border rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={newEvent.description}
