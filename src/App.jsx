@@ -233,7 +233,9 @@ function AppContent() {
           {isAuthenticated && (
             <div className="hidden md:flex items-center gap-4">
               <div>
+                <label htmlFor="site-search" className="sr-only">Search site</label>
                 <input
+                  id="site-search"
                   type="text"
                   placeholder="Search..."
                   value={searchQuery}
@@ -247,6 +249,7 @@ function AppContent() {
 
               <div className="relative">
                 <button
+                  aria-label="Open profile menu"
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center font-bold text-purple-700"
                 >
@@ -384,7 +387,9 @@ function AppContent() {
 
             {menuOpen && (
               <div className="flex flex-col gap-2 md:hidden">
+                <label htmlFor="mobile-site-search" className="sr-only">Search site</label>
                 <input
+                  id="mobile-site-search"
                   type="text"
                   placeholder="Search..."
                   value={searchQuery}
@@ -398,6 +403,7 @@ function AppContent() {
 
                 <div className="relative mb-2">
                   <button
+                    aria-label="Open profile menu"
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center font-bold text-purple-700"
                   >
