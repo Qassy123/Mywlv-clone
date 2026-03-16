@@ -131,7 +131,14 @@ export default function Grades() {
         <button onClick={() => setSortOrder("asc")} className="px-3 py-1 bg-gray-200 dark:bg-gray-700 dark:text-white rounded">Sort Asc</button>
         <button onClick={() => setSortOrder("desc")} className="px-3 py-1 bg-gray-200 dark:bg-gray-700 dark:text-white rounded">Sort Desc</button>
         <button onClick={() => setSortOrder(null)} className="px-3 py-1 bg-gray-200 dark:bg-gray-700 dark:text-white rounded">Reset</button>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-3 py-1 border rounded dark:bg-gray-700 dark:text-white">
+
+        <label htmlFor="grades-filter" className="sr-only">Filter grades</label>
+        <select
+          id="grades-filter"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="px-3 py-1 border rounded dark:bg-gray-700 dark:text-white"
+        >
           <option value="all">All</option>
           <option value="passed">Passed</option>
           <option value="failed">Failed</option>
@@ -139,14 +146,14 @@ export default function Grades() {
       </div>
 
       <div className="flex flex-wrap gap-3 mb-6">
-        <button onClick={exportCSV} className="px-3 py-1 bg-green-500 text-white rounded">Export CSV</button>
-        <button onClick={exportPDF} className="px-3 py-1 bg-red-500 text-white rounded">Export PDF</button>
+        <button onClick={exportCSV} className="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-800">Export CSV</button>
+        <button onClick={exportPDF} className="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-800">Export PDF</button>
       </div>
 
       <div className="overflow-x-auto hidden md:block">
         <table className="w-full border-collapse shadow-md rounded-lg">
           <thead>
-            <tr className="bg-purple-600 text-white">
+            <tr className="bg-purple-700 text-white">
               <th className="p-3 text-left">Module</th>
               <th className="p-3 text-left">Assignment</th>
               <th className="p-3 text-left">Grade</th>
@@ -159,15 +166,15 @@ export default function Grades() {
               <tr key={idx} className="bg-white dark:bg-gray-800 border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="p-3">{g.module}</td>
                 <td className="p-3">{g.assignment}</td>
-                <td className={`p-3 font-semibold ${g.grade >= 50 ? "text-green-600" : "text-red-600"}`}>
+                <td className={`p-3 font-semibold ${g.grade >= 50 ? "text-green-700" : "text-red-700"}`}>
                   {g.grade}%
                 </td>
-                <td className="p-3">
+                <td className="p-3 text-gray-900 dark:text-gray-100">
                   {g.grade >= 80 ? "🏆 Excellent" : g.grade >= 50 ? "✅ On Track" : "⚠️ Needs Support"}
                 </td>
                 <td className="p-3">
                   <button
-                    className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-700"
+                    className="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-800"
                     onClick={() => {
                       setSelectedModule(g);
                       setSelectedComment(null);
@@ -187,12 +194,12 @@ export default function Grades() {
           <div key={idx} className="p-4 bg-white dark:bg-gray-800 rounded shadow">
             <h3 className="font-bold">{g.module}</h3>
             <p>{g.assignment}</p>
-            <p className={`font-semibold ${g.grade >= 50 ? "text-green-600" : "text-red-600"}`}>{g.grade}%</p>
-            <p>
+            <p className={`font-semibold ${g.grade >= 50 ? "text-green-700" : "text-red-700"}`}>{g.grade}%</p>
+            <p className="text-gray-900 dark:text-gray-100">
               {g.grade >= 80 ? "🏆 Excellent" : g.grade >= 50 ? "✅ On Track" : "⚠️ Needs Support"}
             </p>
             <button
-              className="mt-2 px-3 py-1 bg-purple-500 text-white rounded"
+              className="mt-2 px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-800"
               onClick={() => {
                 setSelectedModule(g);
                 setSelectedComment(null);
@@ -212,7 +219,7 @@ export default function Grades() {
 
         <div className="mt-4">
           <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded">
-            <div className="h-4 bg-purple-600 rounded" style={{ width: `${progress}%` }}></div>
+            <div className="h-4 bg-purple-700 rounded" style={{ width: `${progress}%` }}></div>
           </div>
           <p className="text-sm mt-1">Tracking towards classification: {progress}%</p>
         </div>
@@ -265,6 +272,8 @@ export default function Grades() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
             <button
+              type="button"
+              aria-label="Close grade breakdown modal"
               className="absolute top-2 right-2 px-2 py-1 bg-gray-300 dark:bg-gray-700 rounded hover:bg-gray-400"
               onClick={() => setSelectedModule(null)}
             >
@@ -283,12 +292,12 @@ export default function Grades() {
                       <div className="flex justify-between items-center">
                         <div>
                           <span className="font-semibold">{b.part}:</span>{" "}
-                          <span className={`${b.grade >= 50 ? "text-green-600" : "text-red-600"} font-semibold`}>
+                          <span className={`${b.grade >= 50 ? "text-green-700" : "text-red-700"} font-semibold`}>
                             {b.grade}%
                           </span>
                         </div>
                         <button
-                          className="ml-3 px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-700"
+                          className="ml-3 px-2 py-1 text-sm bg-blue-700 text-white rounded hover:bg-blue-800"
                           onClick={() => setSelectedComment(b)}
                         >
                           Comments
@@ -300,7 +309,7 @@ export default function Grades() {
 
                 <p className="font-bold">
                   Final Grade:{" "}
-                  <span className={`${selectedModule.grade >= 50 ? "text-green-600" : "text-red-600"}`}>
+                  <span className={`${selectedModule.grade >= 50 ? "text-green-700" : "text-red-700"}`}>
                     {selectedModule.grade}%
                   </span>
                 </p>
@@ -324,7 +333,7 @@ export default function Grades() {
                 )}
 
                 <button
-                  className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-700"
+                  className="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-800"
                   onClick={() => setSelectedComment(null)}
                 >
                   Back
