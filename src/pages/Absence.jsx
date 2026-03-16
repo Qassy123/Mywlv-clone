@@ -23,7 +23,6 @@ export default function Absence() {
   const [error, setError] = useState("");
   const [submitMessage, setSubmitMessage] = useState("");
 
-  // This function fetches previously submitted absence requests for the logged-in user.
   const fetchAbsences = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -59,7 +58,6 @@ export default function Absence() {
     fetchAbsences();
   }, []);
 
-  // This function submits a new absence request to the backend.
   const handleSubmitAbsence = async (event) => {
     event.preventDefault();
     setSubmitMessage("");
@@ -107,7 +105,6 @@ export default function Absence() {
     }
   };
 
-  // This function returns absence records sorted by newest first for display consistency.
   const sortedAbsenceRecords = useMemo(() => {
     return [...absenceRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [absenceRecords]);
@@ -123,8 +120,11 @@ export default function Absence() {
         className="rounded-2xl bg-gray-100 dark:bg-gray-800 p-6 shadow mb-6 space-y-4"
       >
         <div>
-          <label className="block text-sm font-medium mb-2">Module</label>
+          <label htmlFor="moduleName" className="block text-sm font-medium mb-2">
+            Module
+          </label>
           <input
+            id="moduleName"
             type="text"
             value={moduleName}
             onChange={(event) => setModuleName(event.target.value)}
@@ -134,8 +134,11 @@ export default function Absence() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Date</label>
+          <label htmlFor="absenceDate" className="block text-sm font-medium mb-2">
+            Date
+          </label>
           <input
+            id="absenceDate"
             type="date"
             value={absenceDate}
             onChange={(event) => setAbsenceDate(event.target.value)}
@@ -144,8 +147,11 @@ export default function Absence() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Reason</label>
+          <label htmlFor="reason" className="block text-sm font-medium mb-2">
+            Reason
+          </label>
           <textarea
+            id="reason"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             placeholder="Enter your absence reason"
